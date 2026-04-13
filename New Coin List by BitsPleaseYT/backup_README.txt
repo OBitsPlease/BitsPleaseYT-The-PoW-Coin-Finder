@@ -1,0 +1,1 @@
+This folder contains the original project files before restructuring. Safe to delete after verifying the app works in the cleaned structure.

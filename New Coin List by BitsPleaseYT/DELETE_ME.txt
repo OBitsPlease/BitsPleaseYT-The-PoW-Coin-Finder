@@ -1,0 +1,1 @@
+All project files have been moved to the parent directory. This folder is now empty and can be deleted.

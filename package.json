@@ -1,0 +1,74 @@
+{
+  "name": "bitspleaseyt-the-pow-coin-finder",
+  "productName": "BitsPleaseYT The PoW Coin Finder.",
+  "version": "1.0.0",
+  "description": "BitsPleaseYT The PoW Coin Finder. - Electron app to list newly announced POW coins",
+  "main": "main.js",
+  "scripts": {
+    "preinstall": "npx npm-force-resolutions",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --publish never",
+    "dist:win": "electron-builder --win nsis --x64 --publish never",
+    "dist:mac": "electron-builder --mac dmg zip --publish never"
+  },
+  "author": "BitsPleaseYT",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.2.3",
+    "electron-builder": "^26.8.1"
+  },
+  "dependencies": {
+    "axios": "^1.14.0",
+    "cheerio": "^1.2.0",
+    "jsdom": "^20.0.0",
+    "node-fetch": "^2.7.0",
+    "undici": "^5.26.5"
+  },
+  "resolutions": {
+    "undici": "5.26.5"
+  },
+  "build": {
+    "appId": "com.bitspleaseyt.powcoinfinder",
+    "productName": "BitsPleaseYT The PoW Coin Finder.",
+    "asar": true,
+    "files": [
+      "**/*",
+      "!dist/**/*",
+      "!backup/**/*",
+      "!New Coin List by BitsPleaseYT/**/*",
+      "!.git/**/*",
+      "!debug.log"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.finance",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.inherit.plist",
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    },
+    "dmg": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
+    }
+  }
+}

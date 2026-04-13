@@ -1,0 +1,1 @@
+This folder is intentionally left empty after cleanup. All project files are now in the parent directory.

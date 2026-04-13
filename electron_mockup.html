@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BitsPleaseYT The PoW Coin Finder.</title>
+  <style>
+    :root {
+      --bg-0: #030a13;
+      --bg-1: #111111;
+      --panel: #151515;
+      --line: #2d2d2d;
+      --text: #d8ecff;
+      --muted: #87a2be;
+      --accent: #36e39a;
+      --chip: #202020;
+      --chip-border: #3d3d3d;
+      --btn-bg: #232323;
+      --btn-border: #454545;
+      --btn-hover: #2f2f2f;
+      --warn: #ffc44f;
+      --old: #ff8a56;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:
+        radial-gradient(circle at 10% -10%, #2a2a2a 0%, transparent 34%),
+        radial-gradient(circle at 95% 0%, #232323 0%, transparent 30%),
+        linear-gradient(160deg, var(--bg-0), var(--bg-1));
+      color: var(--text);
+      margin: 0;
+      min-height: 100vh;
+      padding: 14px;
+    }
+
+    .container {
+      border: 1px solid var(--line);
+      background: rgba(17, 17, 17, 0.92);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 16px 50px rgba(0, 0, 0, 0.42);
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(20, 20, 20, 0.95);
+    }
+
+    .creator-header {
+      padding: 7px 14px;
+      font-size: 11px;
+      color: #86a2be;
+      letter-spacing: 0.03em;
+      border-bottom: 1px solid var(--line);
+      background: rgba(24, 24, 24, 0.92);
+    }
+
+    .chip {
+      border: 1px solid var(--chip-border);
+      background: var(--chip);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .chip-btn {
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    }
+
+    .chip-btn:hover {
+      border-color: #5a5a5a;
+      background: #2b2b2b;
+      color: #ecf8ff;
+    }
+
+    .chip.active {
+      color: #03151f;
+      background: var(--accent);
+      border-color: #16bf78;
+      font-weight: 700;
+    }
+
+    .topbar .spacer {
+      flex: 1;
+    }
+
+    .view {
+      display: none;
+    }
+
+    .view.active {
+      display: block;
+    }
+
+    .view-title {
+      margin: 0;
+      padding: 10px 14px;
+      color: #a7c8e7;
+      border-bottom: 1px solid var(--line);
+      background: rgba(24, 24, 24, 0.82);
+      font-size: 13px;
+      letter-spacing: 0.02em;
+    }
+
+    .topbar select {
+      border: 1px solid var(--chip-border);
+      background: #202020;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+
+    .search-wrap {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-wrap label {
+      color: #9ec2e4;
+      font-size: 13px;
+    }
+
+    .search-wrap input {
+      border: 1px solid var(--chip-border);
+      background: #202020;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 13px;
+      width: 280px;
+      max-width: 40vw;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1320px;
+    }
+
+    thead th {
+      text-align: left;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 700;
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      letter-spacing: 0.02em;
+    }
+
+    thead th.sortable {
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.15s ease;
+    }
+
+    thead th.sortable:hover {
+      color: #c7e8ff;
+    }
+
+    thead th.sortable.sorted-asc,
+    thead th.sortable.sorted-desc {
+      color: #dff4ff;
+    }
+
+    thead th.sortable.sorted-asc::after {
+      content: " ▲";
+      font-size: 10px;
+      color: #8ecbff;
+    }
+
+    thead th.sortable.sorted-desc::after {
+      content: " ▼";
+      font-size: 10px;
+      color: #8ecbff;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(50, 50, 50, 0.9);
+    }
+
+    tbody tr:hover {
+      background: rgba(44, 44, 44, 0.65);
+    }
+
+    td {
+      padding: 12px;
+      vertical-align: middle;
+      font-size: 14px;
+    }
+
+    .col-index {
+      width: 48px;
+      color: #9fc6ea;
+      font-weight: 700;
+    }
+
+    .coin-cell {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 280px;
+    }
+
+    .coin-badge {
+      position: relative;
+      width: 26px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .coin-logo {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(105, 105, 105, 0.75);
+      background: #1f1f1f;
+      display: block;
+    }
+
+    .coin-dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1bd49e, #177da8);
+      color: #012338;
+      font-weight: 800;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .coin-dot.fallback {
+      position: absolute;
+      inset: 0;
+    }
+
+    .coin-name {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .coin-name.yellow {
+      color: var(--warn);
+    }
+
+    .coin-name.orange {
+      color: var(--old);
+    }
+
+    .coin-date {
+      color: #b2c8df;
+      white-space: nowrap;
+      min-width: 140px;
+    }
+
+    .metric {
+      min-width: 95px;
+      color: #d4e8fb;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .metric.small {
+      min-width: 82px;
+    }
+
+    .muted {
+      color: #6f8aa4;
+    }
+
+    .coin-page-link a {
+      color: #7fcfff;
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(127, 207, 255, 0.45);
+      font-size: 13px;
+    }
+
+    .coin-page-link a:hover {
+      color: #c7ebff;
+      border-color: rgba(199, 235, 255, 0.95);
+    }
+
+    .source-link a {
+      color: #77c7ff;
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(119, 199, 255, 0.5);
+    }
+
+    .source-link a:hover {
+      color: #a8e1ff;
+      border-color: rgba(168, 225, 255, 0.95);
+    }
+
+    .links {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      min-width: 220px;
+    }
+
+    .links a {
+      text-decoration: none;
+      color: #daf2ff;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      transition: background 0.2s ease, border 0.2s ease;
+    }
+
+    .links a:hover {
+      background: var(--btn-hover);
+      border-color: #3a84be;
+    }
+
+    .empty-links {
+      color: #6f8aa4;
+      font-size: 13px;
+    }
+
+    .footer {
+      text-align: center;
+      color: #86a2be;
+      font-size: 13px;
+      margin: 0;
+      padding: 10px;
+      border-top: 1px solid var(--line);
+      background: rgba(18, 18, 18, 0.92);
+    }
+
+    .status {
+      padding: 18px 14px;
+      color: #9ec2e4;
+      font-size: 14px;
+    }
+
+    .startup-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 28px;
+      background-image:
+        linear-gradient(to top, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.2)),
+        url('CreatedByBitsPleaseYT.png');
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      opacity: 1;
+      transition: opacity 0.55s ease;
+    }
+
+    .startup-splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .splash-panel {
+      width: min(720px, 92vw);
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.62);
+      backdrop-filter: blur(2px);
+    }
+
+    .splash-title {
+      color: #e3f2ff;
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+
+    .splash-note {
+      color: #a5c2dd;
+      font-size: 12px;
+      margin: 0 0 10px 0;
+    }
+
+    .splash-bar {
+      width: 100%;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #5b5b5b;
+      background: #1d1d1d;
+    }
+
+    .splash-bar-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #6f6f6f, #9a9a9a, #cecece);
+      transition: width 0.1s linear;
+    }
+
+    .detailed-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(24, 24, 24, 0.82);
+      flex-wrap: wrap;
+    }
+
+    .detailed-search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .detailed-search-wrap label {
+      color: #9ec2e4;
+      font-size: 13px;
+    }
+
+    .detailed-search-wrap input {
+      border: 1px solid var(--chip-border);
+      background: #202020;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 13px;
+      width: 280px;
+      max-width: 40vw;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 8px;
+      }
+
+      .topbar {
+        gap: 8px;
+      }
+
+      .chip {
+        font-size: 12px;
+        padding: 6px 10px;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <div id="startup-splash" class="startup-splash" aria-live="polite">
+    <div class="splash-panel">
+      <p class="splash-title">BitsPleaseYT The PoW Coin Finder.</p>
+      <p id="splash-status" class="splash-note">Starting up and preloading Proof of Work data...</p>
+      <div class="splash-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <div id="splash-bar-fill" class="splash-bar-fill"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="new-listings">
+    <div class="creator-header">Created by BitsPleaseYT</div>
+    <div class="topbar">
+      <button class="chip chip-btn" id="nav-pow" type="button">Proof of Work (PoW)</button>
+      <button class="chip chip-btn active" id="nav-new" type="button">New Listings</button>
+      <button class="chip chip-btn" id="nav-detailed" type="button">PoW Prices</button>
+      <a class="chip chip-btn" href="https://www.coingecko.com/en/categories/proof-of-work-pow" target="_blank" rel="noopener noreferrer">CoinGecko</a>
+      <a class="chip chip-btn" href="https://bitcointalk.org/index.php?board=159.0" target="_blank" rel="noopener noreferrer">Bitcointalk</a>
+      <a class="chip chip-btn" href="https://miningpoolstats.stream/" target="_blank" rel="noopener noreferrer">Open MiningPoolStats</a>
+      <span class="spacer"></span>
+      <label for="sort-select" style="color:#9ec2e4;font-size:13px;">Sort:</label>
+      <select id="sort-select">
+        <option value="newest" selected>Newest to Oldest</option>
+        <option value="oldest">Oldest to Newest</option>
+      </select>
+      <div class="search-wrap" id="pow-search-wrap">
+        <label for="pow-search">Search:</label>
+        <input id="pow-search" type="text" placeholder="Name, symbol, algorithm">
+      </div>
+    </div>
+
+    <div class="view active" id="view-new-listings">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Coin</th>
+              <th>Price</th>
+              <th>Listed</th>
+              <th>Thread</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody id="coin-list">
+            <tr>
+              <td colspan="6" class="status">Loading...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="view" id="view-pow-directory">
+      <p class="view-title">PoW Coins from MiningPoolStats (top by market cap) with links from each coin page</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="sortable" data-pow-sort="name">Coin</th>
+              <th class="sortable" data-pow-sort="symbol">Symbol</th>
+              <th class="sortable" data-pow-sort="algo">Algorithm</th>
+              <th class="sortable" data-pow-sort="price">Price</th>
+              <th class="sortable" data-pow-sort="change7d">7d</th>
+              <th class="sortable" data-pow-sort="marketCap">Market Cap</th>
+              <th class="sortable" data-pow-sort="pageUrl">Coin Page</th>
+              <th>Links</th>
+            </tr>
+          </thead>
+          <tbody id="pow-list">
+            <tr>
+              <td colspan="9" class="status">Click Proof of Work (PoW) to load this list.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="view" id="view-detailed-coins">
+      <div class="detailed-header">
+        <span class="spacer"></span>
+        <div class="detailed-search-wrap">
+          <label for="detailed-search">Search:</label>
+          <input id="detailed-search" type="text" placeholder="Name, symbol, algorithm">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th class="sortable" data-detailed-sort="name">Coin</th>
+              <th class="sortable" data-detailed-sort="symbol">Symbol</th>
+              <th class="sortable" data-detailed-sort="algo">Algorithm</th>
+              <th class="sortable" data-detailed-sort="price">Price</th>
+              <th class="sortable" data-detailed-sort="change7d">7d</th>
+              <th class="sortable" data-detailed-sort="marketCap">Market Cap</th>
+            </tr>
+          </thead>
+          <tbody id="detailed-list">
+            <tr>
+              <td colspan="7" class="status">Load data by clicking PoW Prices</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer" id="footer">Electron/Web GUI</div>
+  </div>
+  <script>
+    let currentSort = 'newest';
+    let currentView = 'new';
+    let powDirectoryLoaded = false;
+    let powDirectoryLoading = false;
+    let powDirectoryLoadPromise = null;
+    let powDirectoryData = [];
+    let powSortKey = 'marketCap';
+    let powSortDirection = 'desc';
+    let powSearchQuery = '';
+    const powResolvedIconsByName = new Map();
+
+    const sortLabel = document.querySelector('label[for="sort-select"]');
+    const sortSelect = document.getElementById('sort-select');
+    const navPow = document.getElementById('nav-pow');
+    const navNew = document.getElementById('nav-new');
+    const navDetailed = document.getElementById('nav-detailed');
+    const newView = document.getElementById('view-new-listings');
+    const powView = document.getElementById('view-pow-directory');
+    const detailedView = document.getElementById('view-detailed-coins');
+    const powSortHeaders = Array.from(document.querySelectorAll('th[data-pow-sort]'));
+    const powSearchWrap = document.getElementById('pow-search-wrap');
+    const powSearchInput = document.getElementById('pow-search');
+    const detailedList = document.getElementById('detailed-list');
+    const detailedSearchWrap = document.querySelector('.detailed-search-wrap');
+    const detailedSearchInput = document.getElementById('detailed-search');
+    const detailedSortHeaders = Array.from(document.querySelectorAll('th[data-detailed-sort]'));
+
+    let detailedCoinsLoaded = false;
+    let allCombinedCoins = [];
+    let detailedSearchQuery = '';
+    let detailedSortKey = 'marketCap';
+    let detailedSortDirection = 'desc';
+
+    document.getElementById('sort-select').addEventListener('change', function() {
+      currentSort = this.value;
+      loadCoins();
+    });
+
+    navNew.addEventListener('click', () => {
+      switchView('new');
+    });
+
+    navPow.addEventListener('click', () => {
+      switchView('pow');
+      ensurePowDirectoryLoaded();
+    });
+
+    navDetailed.addEventListener('click', () => {
+      switchView('detailed');
+      ensureDetailedCoinsLoaded();
+    });
+
+    powSortHeaders.forEach((header) => {
+      header.addEventListener('click', () => {
+        const key = header.dataset.powSort;
+        if (!key) return;
+        if (powSortKey === key) {
+          powSortDirection = powSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          powSortKey = key;
+          powSortDirection = key === 'marketCap' || key === 'price' ? 'desc' : 'asc';
+        }
+        renderPowDirectoryRows();
+        updatePowSortIndicators();
+      });
+    });
+
+    if (powSearchInput) {
+      powSearchInput.addEventListener('input', () => {
+        powSearchQuery = String(powSearchInput.value || '').trim().toLowerCase();
+        renderPowDirectoryRows();
+      });
+    }
+
+    if (detailedSearchInput) {
+      detailedSearchInput.addEventListener('input', () => {
+        detailedSearchQuery = String(detailedSearchInput.value || '').trim().toLowerCase();
+        renderDetailedCoins();
+      });
+    }
+
+    detailedSortHeaders.forEach((header) => {
+      header.addEventListener('click', () => {
+        const key = header.dataset.detailedSort;
+        if (!key) return;
+        if (detailedSortKey === key) {
+          detailedSortDirection = detailedSortDirection === 'asc' ? 'desc' : 'asc';
+        } else {
+          detailedSortKey = key;
+          detailedSortDirection = key === 'marketCap' || key === 'price' || key === 'change7d' ? 'desc' : 'asc';
+        }
+        renderDetailedCoins();
+        updateDetailedSortIndicators();
+      });
+    });
+
+    function switchView(viewName) {
+      currentView = viewName;
+      const isNew = viewName === 'new';
+      const isPow = viewName === 'pow';
+      const isDetailed = viewName === 'detailed';
+
+      newView.classList.toggle('active', isNew);
+      powView.classList.toggle('active', isPow);
+      detailedView.classList.toggle('active', isDetailed);
+
+      navNew.classList.toggle('active', isNew);
+      navPow.classList.toggle('active', isPow);
+      navDetailed.classList.toggle('active', isDetailed);
+
+      if (sortLabel) sortLabel.style.display = isNew ? 'inline' : 'none';
+      if (sortSelect) sortSelect.style.display = isNew ? 'inline-block' : 'none';
+      if (powSearchWrap) powSearchWrap.style.display = isPow ? 'inline-flex' : 'none';
+      if (detailedSearchWrap) detailedSearchWrap.style.display = isDetailed ? 'flex' : 'none';
+    }
+
+    function updatePowSortIndicators() {
+      powSortHeaders.forEach((header) => {
+        const key = header.dataset.powSort;
+        header.classList.remove('sorted-asc', 'sorted-desc');
+        if (key === powSortKey) {
+          header.classList.add(powSortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+        }
+      });
+    }
+
+    function updateDetailedSortIndicators() {
+      detailedSortHeaders.forEach((header) => {
+        const key = header.dataset.detailedSort;
+        header.classList.remove('sorted-asc', 'sorted-desc');
+        if (key === detailedSortKey) {
+          header.classList.add(detailedSortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc');
+        }
+      });
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function cleanCoinName(rawName) {
+      return String(rawName || '')
+        .replace(/\[(RE-)?ANN\]/ig, '')
+        .replace(/\s+/g, ' ')
+        .trim() || 'Unknown Coin';
+    }
+
+    function shortenDate(dateStr) {
+      if (!dateStr) return '';
+      const match = dateStr.match(/(Today|Yesterday)|((Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s*\d{4})|(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*,?\s*\d{4})|(\d{4}-\d{2}-\d{2})/i);
+      return match ? match[0] : dateStr;
+    }
+
+    function parseListingDate(dateStr) {
+      if (!dateStr) return null;
+      const raw = String(dateStr).trim();
+      if (!raw) return null;
+
+      const lower = raw.toLowerCase();
+      const now = new Date();
+      const midnightToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      const timeMatch = raw.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
+      let hour = 12;
+      let minute = 0;
+      if (timeMatch) {
+        hour = parseInt(timeMatch[1], 10);
+        minute = parseInt(timeMatch[2], 10);
+        const ampm = (timeMatch[3] || '').toUpperCase();
+        if (ampm === 'PM' && hour < 12) hour += 12;
+        if (ampm === 'AM' && hour === 12) hour = 0;
+      }
+
+      if (lower.includes('today')) {
+        return new Date(midnightToday.getFullYear(), midnightToday.getMonth(), midnightToday.getDate(), hour, minute);
+      }
+      if (lower.includes('yesterday')) {
+        const yesterday = new Date(midnightToday);
+        yesterday.setDate(yesterday.getDate() - 1);
+        return new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), hour, minute);
+      }
+
+      const direct = Date.parse(raw.replace(/\s+at\s+/i, ' '));
+      if (!Number.isNaN(direct)) {
+        return new Date(direct);
+      }
+
+      const extracted = shortenDate(raw);
+      const parsedExtracted = Date.parse((extracted || '').replace(/\s+at\s+/i, ' '));
+      if (!Number.isNaN(parsedExtracted)) {
+        return new Date(parsedExtracted);
+      }
+
+      return null;
+    }
+
+    function makeLinkButton(url, label) {
+      if (!url) return '';
+      const safeHref = escapeHtml(url);
+      return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+    }
+
+    function buildCoinQuery(rawName) {
+      return cleanCoinName(rawName)
+        .replace(/\[[^\]]+\]/g, ' ')
+        .replace(/\([^\)]+\)/g, ' ')
+        .replace(/\b[A-Z0-9]{2,8}\b/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    async function fetchJsonWithTimeout(url, timeoutMs) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs || 7000);
+      try {
+        const response = await fetch(url, {
+          signal: controller.signal,
+          headers: { Accept: 'application/json' }
+        });
+        if (!response.ok) {
+          return null;
+        }
+        return await response.json();
+      } catch {
+        return null;
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function enrichMarketData(coins) {
+      const indexed = coins.map((coin, index) => ({
+        index,
+        query: buildCoinQuery(coin.name)
+      }));
+
+      const toLookup = indexed.filter(item => item.query.length >= 2).slice(0, 18);
+      const idByCoinIndex = new Map();
+      const resolvedIds = new Set();
+
+      await Promise.all(toLookup.map(async item => {
+        const searchUrl = `https://api.coingecko.com/api/v3/search?query=${encodeURIComponent(item.query)}`;
+        const searchData = await fetchJsonWithTimeout(searchUrl, 6000);
+        const hits = searchData && Array.isArray(searchData.coins) ? searchData.coins : [];
+        if (!hits.length) return;
+        const selected = hits[0];
+        if (!selected || !selected.id) return;
+        idByCoinIndex.set(item.index, selected.id);
+        resolvedIds.add(selected.id);
+      }));
+
+      if (!resolvedIds.size) {
+        return coins;
+      }
+
+      const marketUrl = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${encodeURIComponent(Array.from(resolvedIds).join(','))}&price_change_percentage=1h,24h,7d`;
+      const markets = await fetchJsonWithTimeout(marketUrl, 8000);
+      if (!Array.isArray(markets)) {
+        return coins;
+      }
+
+      const marketById = new Map(markets.map(market => [market.id, market]));
+      return coins.map((coin, index) => {
+        const id = idByCoinIndex.get(index);
+        if (!id || !marketById.has(id)) {
+          return coin;
+        }
+        return {
+          ...coin,
+          market: marketById.get(id)
+        };
+      });
+    }
+
+    function formatPrice(value) {
+      if (typeof value !== 'number' || Number.isNaN(value)) return '<span class="muted">n/a</span>';
+      return '$' + value.toLocaleString(undefined, {
+        minimumFractionDigits: value >= 1 ? 2 : 4,
+        maximumFractionDigits: value >= 1 ? 2 : 8
+      });
+    }
+
+    function formatPercent(value) {
+      if (typeof value !== 'number' || Number.isNaN(value)) return '<span class="muted">n/a</span>';
+      return `${value.toFixed(2)}%`;
+    }
+
+    function formatCap(value) {
+      if (typeof value !== 'number' || Number.isNaN(value)) return '<span class="muted">n/a</span>';
+      return '$' + value.toLocaleString(undefined, {
+        maximumFractionDigits: 0
+      });
+    }
+
+    function logoUrlForCoin(coin) {
+      const website = coin.website || '';
+      if (website) {
+        try {
+          const parsed = new URL(website);
+          return `https://www.google.com/s2/favicons?sz=64&domain=${encodeURIComponent(parsed.hostname)}`;
+        } catch {
+          return '';
+        }
+      }
+      return '';
+    }
+
+    function powIconUrlForCoin(coin) {
+      const page = String((coin && coin.page) || '').trim().toLowerCase();
+      if (!page) return '';
+      return `https://miningpoolstats.stream/ico/${encodeURIComponent(page)}.webp`;
+    }
+
+    function normalizeSlug(value) {
+      return String(value || '')
+        .toLowerCase()
+        .replace(/&/g, ' and ')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+    }
+
+    function iconKeyForCoinName(name) {
+      return normalizeSlug(name || 'unknown');
+    }
+
+    function buildPowIconCandidates(coin) {
+      const page = normalizeSlug((coin && coin.page) || '');
+      const nameSlug = normalizeSlug((coin && coin.name) || '');
+      const candidates = [];
+
+      if (page) {
+        candidates.push(page);
+        // Multi-algo pages often use suffixes; base slug may hold the shared icon.
+        const dashIdx = page.lastIndexOf('-');
+        if (dashIdx > 0) {
+          candidates.push(page.slice(0, dashIdx));
+        }
+      }
+      if (nameSlug) {
+        candidates.push(nameSlug);
+      }
+
+      const unique = [];
+      const seen = new Set();
+      candidates.forEach((slug) => {
+        if (!slug || seen.has(slug)) return;
+        seen.add(slug);
+        unique.push(`https://miningpoolstats.stream/ico/${encodeURIComponent(slug)}.webp`);
+      });
+      return unique;
+    }
+
+    function applySharedPowIcon(iconKey, iconUrl) {
+      const imgs = Array.from(document.querySelectorAll('img.coin-logo[data-icon-key]'));
+      imgs.forEach((img) => {
+        if (img.dataset.iconKey !== iconKey) return;
+        if (img.src !== iconUrl) {
+          img.src = iconUrl;
+        }
+        img.style.display = 'block';
+        if (img.nextElementSibling) {
+          img.nextElementSibling.style.display = 'none';
+        }
+      });
+    }
+
+    function onPowIconLoad(imgEl) {
+      if (!imgEl || !imgEl.dataset) return;
+      const iconKey = imgEl.dataset.iconKey || '';
+      if (!iconKey) return;
+      powResolvedIconsByName.set(iconKey, imgEl.src);
+      applySharedPowIcon(iconKey, imgEl.src);
+    }
+
+    function onPowIconError(imgEl) {
+      if (!imgEl || !imgEl.dataset) return;
+      const candidates = String(imgEl.dataset.iconCandidates || '').split('|').filter(Boolean);
+      let idx = parseInt(imgEl.dataset.iconIndex || '0', 10);
+      if (Number.isNaN(idx)) idx = 0;
+      idx += 1;
+
+      if (idx < candidates.length) {
+        imgEl.dataset.iconIndex = String(idx);
+        imgEl.src = candidates[idx];
+        return;
+      }
+
+      imgEl.style.display = 'none';
+      if (imgEl.nextElementSibling) {
+        imgEl.nextElementSibling.style.display = 'inline-flex';
+      }
+    }
+
+    async function loadCoins() {
+      const list = document.getElementById('coin-list');
+      list.innerHTML = '<tr><td colspan="6" class="status">Loading...</td></tr>';
+
+      let coins = await window.api.fetchCoins();
+      if (coins && coins.error && /login|session|captcha/i.test(coins.error)) {
+        // If login required, prompt user
+        await window.api.promptLogin();
+        list.innerHTML = '<tr><td colspan="6" class="status">Login required. Please log in and try again.</td></tr>';
+        return;
+      }
+
+      if (!Array.isArray(coins)) {
+        list.innerHTML = '<tr><td colspan="6" class="status">Error fetching coins: ' + escapeHtml(coins.error || 'Unknown error') + '</td></tr>';
+        return;
+      }
+
+      if (coins.length === 0) {
+        list.innerHTML = '<tr><td colspan="6" class="status">No new POW coins found.</td></tr>';
+        return;
+      }
+
+      const now = new Date();
+      const maxAgeDays = 30;
+      coins = coins.filter((coin) => {
+        const parsedDate = parseListingDate(coin.date || '');
+        if (!parsedDate) return true;
+        const ageDays = (now - parsedDate) / (1000 * 60 * 60 * 24);
+        return ageDays >= -1 && ageDays <= maxAgeDays;
+      });
+
+      if (coins.length === 0) {
+        list.innerHTML = '<tr><td colspan="6" class="status">No newly listed POW coins in the last 30 days.</td></tr>';
+        return;
+      }
+
+      // Sort coins by date
+      coins.sort((a, b) => {
+        const da = parseListingDate(a.date || '');
+        const db = parseListingDate(b.date || '');
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return currentSort === 'newest' ? db.getTime() - da.getTime() : da.getTime() - db.getTime();
+      });
+
+      coins = await enrichMarketData(coins);
+
+      list.innerHTML = '';
+
+      coins.forEach((coin, index) => {
+        // Determine age color
+        let coinClass = '';
+        let dateStr = coin.date || '';
+        let coinDate = parseListingDate(dateStr);
+        if (coinDate) {
+          const now = new Date();
+          const days = (now - coinDate) / (1000 * 60 * 60 * 24);
+          if (days > 30) coinClass = 'orange';
+          else if (days > 7) coinClass = 'yellow';
+        }
+
+        const bitcointalk = coin.bitcointalk || coin.link || '';
+        const links = [
+          makeLinkButton(bitcointalk, 'Thread'),
+          makeLinkButton(coin.website, 'Website'),
+          makeLinkButton(coin.github, 'GitHub'),
+          makeLinkButton(coin.explorer, 'Explorer')
+        ].filter(Boolean).join('');
+
+        const row = document.createElement('tr');
+        const cleanName = cleanCoinName(coin.name);
+        const shortDate = shortenDate(dateStr);
+        const nameInitial = escapeHtml(cleanName.charAt(0).toUpperCase() || '?');
+        const logoUrl = logoUrlForCoin(coin);
+        const market = coin.market || null;
+
+        const priceCell = formatPrice(market && market.current_price);
+
+        row.innerHTML = `
+          <td class="col-index">${index + 1}</td>
+          <td>
+            <div class="coin-cell">
+              <span class="coin-badge">
+                ${logoUrl ? `<img class="coin-logo" src="${escapeHtml(logoUrl)}" alt="${escapeHtml(cleanName)} logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">` : ''}
+                <span class="coin-dot fallback" style="display:${logoUrl ? 'none' : 'inline-flex'};">${nameInitial}</span>
+              </span>
+              <span class="coin-name${coinClass ? ' ' + coinClass : ''}">${escapeHtml(cleanName)}</span>
+            </div>
+          </td>
+          <td class="metric">${priceCell}</td>
+          <td class="coin-date">${escapeHtml(shortDate || 'Unknown')}</td>
+          <td class="source-link">${bitcointalk ? `<a href="${escapeHtml(bitcointalk)}" target="_blank" rel="noopener noreferrer">Open Thread</a>` : '<span class="empty-links">n/a</span>'}</td>
+          <td>${links ? `<div class="links">${links}</div>` : '<span class="empty-links">No links found</span>'}</td>
+        `;
+
+        list.appendChild(row);
+      });
+    }
+
+    function renderPowLinks(coin) {
+      const links = Array.isArray(coin.links) ? coin.links : [];
+      if (!links.length) return '<span class="empty-links">No links found</span>';
+      const linkButtons = links.slice(0, 10).map(link => {
+        const label = escapeHtml(link.label || link.text || 'Link');
+        const url = escapeHtml(link.url || '');
+        if (!url) return '';
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+      }).filter(Boolean).join('');
+      return linkButtons ? `<div class="links">${linkButtons}</div>` : '<span class="empty-links">No links found</span>';
+    }
+
+    function getPowSortValue(coin, key) {
+      if (!coin) return null;
+      if (key === 'price' || key === 'change7d' || key === 'marketCap') {
+        const numericValue = Number(coin[key]);
+        return Number.isFinite(numericValue) ? numericValue : null;
+      }
+      return String(coin[key] || '').toLowerCase();
+    }
+
+    function sortPowCoins(coins) {
+      const directionFactor = powSortDirection === 'asc' ? 1 : -1;
+      return [...coins].sort((a, b) => {
+        const va = getPowSortValue(a, powSortKey);
+        const vb = getPowSortValue(b, powSortKey);
+        const aMissing = va === null || va === '';
+        const bMissing = vb === null || vb === '';
+        if (aMissing && bMissing) return 0;
+        if (aMissing) return 1;
+        if (bMissing) return -1;
+
+        if (typeof va === 'number' && typeof vb === 'number') {
+          return (va - vb) * directionFactor;
+        }
+
+        return String(va).localeCompare(String(vb), undefined, { sensitivity: 'base' }) * directionFactor;
+      });
+    }
+
+    function renderPowDirectoryRows() {
+      const list = document.getElementById('pow-list');
+      const filteredCoins = powSearchQuery
+        ? powDirectoryData.filter((coin) => {
+            const text = `${coin.name || ''} ${coin.symbol || ''} ${coin.algo || ''}`.toLowerCase();
+            return text.includes(powSearchQuery);
+          })
+        : powDirectoryData;
+
+      const sortedCoins = sortPowCoins(filteredCoins);
+      list.innerHTML = '';
+
+      if (!sortedCoins.length) {
+        list.innerHTML = '<tr><td colspan="9" class="status">No coins matched your search.</td></tr>';
+        return;
+      }
+
+      sortedCoins.forEach((coin, index) => {
+        const row = document.createElement('tr');
+        const coinName = escapeHtml(coin.name || 'Unknown');
+        const iconKey = iconKeyForCoinName(coin.name || 'Unknown');
+        const sharedIcon = powResolvedIconsByName.get(iconKey) || '';
+        const iconCandidates = sharedIcon ? [sharedIcon] : buildPowIconCandidates(coin);
+        const iconUrl = iconCandidates[0] || '';
+        const fallbackInitial = escapeHtml((coin.name || '?').charAt(0).toUpperCase());
+        row.innerHTML = `
+          <td class="col-index">${index + 1}</td>
+          <td>
+            <div class="coin-cell">
+              <span class="coin-badge">
+                ${iconUrl ? `<img class="coin-logo" src="${escapeHtml(iconUrl)}" alt="${coinName} icon" loading="lazy" decoding="async" fetchpriority="low" data-icon-key="${escapeHtml(iconKey)}" data-icon-candidates="${escapeHtml(iconCandidates.join('|'))}" data-icon-index="0" onload="onPowIconLoad(this)" onerror="onPowIconError(this)">` : ''}
+                <span class="coin-dot fallback" style="display:${iconUrl ? 'none' : 'inline-flex'};">${fallbackInitial}</span>
+              </span>
+              <span class="coin-name">${coinName}</span>
+            </div>
+          </td>
+          <td class="metric small">${escapeHtml(coin.symbol || 'n/a')}</td>
+          <td class="metric">${escapeHtml(coin.algo || 'n/a')}</td>
+          <td class="metric">${formatPrice(coin.price)}</td>
+          <td class="metric small">${formatPercent(coin.change7d)}</td>
+          <td class="metric">${formatCap(coin.marketCap)}</td>
+          <td class="coin-page-link">${coin.pageUrl ? `<a href="${escapeHtml(coin.pageUrl)}" target="_blank" rel="noopener noreferrer">Open</a>` : '<span class="empty-links">n/a</span>'}</td>
+          <td>${renderPowLinks(coin)}</td>
+        `;
+        list.appendChild(row);
+      });
+    }
+
+    async function loadPowDirectory() {
+      const list = document.getElementById('pow-list');
+      list.innerHTML = '<tr><td colspan="9" class="status">Loading Proof of Work coins from MiningPoolStats... Initial load may take longer while data is collected.</td></tr>';
+
+      const coins = await window.api.fetchPowDirectory();
+      if (!Array.isArray(coins)) {
+        list.innerHTML = '<tr><td colspan="9" class="status">Error fetching PoW directory: ' + escapeHtml((coins && coins.error) || 'Unknown error') + '</td></tr>';
+        powDirectoryLoading = false;
+        powDirectoryLoadPromise = null;
+        return;
+      }
+
+      if (coins.length === 0) {
+        list.innerHTML = '<tr><td colspan="9" class="status">No PoW coins found from MiningPoolStats.</td></tr>';
+        powDirectoryLoading = false;
+        powDirectoryLoadPromise = null;
+        return;
+      }
+
+      powDirectoryData = coins;
+      renderPowDirectoryRows();
+      updatePowSortIndicators();
+
+      powDirectoryLoaded = true;
+      powDirectoryLoading = false;
+      powDirectoryLoadPromise = null;
+    }
+
+    function ensurePowDirectoryLoaded() {
+      if (powDirectoryLoaded) return Promise.resolve();
+      if (powDirectoryLoading && powDirectoryLoadPromise) return powDirectoryLoadPromise;
+
+      powDirectoryLoading = true;
+      powDirectoryLoadPromise = loadPowDirectory().catch(() => {
+        powDirectoryLoading = false;
+        powDirectoryLoadPromise = null;
+      });
+      return powDirectoryLoadPromise;
+    }
+
+    async function ensureDetailedCoinsLoaded() {
+      if (detailedCoinsLoaded) {
+        renderDetailedCoins();
+        return;
+      }
+
+      detailedList.innerHTML = '<tr><td colspan="7" class="status">Loading all coins...</td></tr>';
+
+      try {
+        // Fetch both data sources
+        const newCoins = await window.api.fetchCoins() || [];
+        const powCoins = await window.api.fetchPowDirectory() || [];
+
+        // Combine and deduplicate by name
+        const coinMap = new Map();
+        
+        // Add PoW coins first (they have more detailed info)
+        powCoins.forEach(coin => {
+          const key = (coin.symbol || coin.name || '').toUpperCase();
+          coinMap.set(key, {
+            name: coin.name || 'Unknown',
+            symbol: coin.symbol || 'n/a',
+            price: coin.price || 0,
+            change7d: coin.change7d,
+            change24h: coin.change24h,
+            marketCap: coin.marketCap || 0,
+            algo: coin.algo,
+            page: coin.page,
+            pageUrl: coin.pageUrl,
+            coingeckoId: coin.coingeckoId,
+            source: 'pow'
+          });
+        });
+
+        // Add new coins (merge if already exists)
+        newCoins.forEach(coin => {
+          const key = (coin.symbol || coin.name || '').toUpperCase();
+          if (!coinMap.has(key)) {
+            coinMap.set(key, {
+              name: coin.name ? cleanCoinName(coin.name) : 'Unknown',
+              symbol: coin.symbol || 'n/a',
+              price: coin.price || 0,
+              change7d: coin.change7d,
+              change24h: coin.change24h,
+              marketCap: coin.marketCap || 0,
+              algo: coin.algo,
+              page: coin.page,
+              pageUrl: coin.pageUrl,
+              coingeckoId: coin.coingeckoId,
+              source: 'new'
+            });
+          }
+        });
+
+        const enrichedCoins = await enrichMarketData(Array.from(coinMap.values()));
+
+        allCombinedCoins = enrichedCoins.map((coin) => ({
+          ...coin,
+          price: typeof coin.price === 'number' ? coin.price : (coin.market && coin.market.current_price),
+          change24h: typeof coin.change24h === 'number'
+            ? coin.change24h
+            : (coin.market && coin.market.price_change_percentage_24h_in_currency),
+          change7d: typeof coin.change7d === 'number'
+            ? coin.change7d
+            : (coin.market && coin.market.price_change_percentage_7d_in_currency),
+          marketCap: typeof coin.marketCap === 'number' ? coin.marketCap : (coin.market && coin.market.market_cap),
+          coingeckoId: coin.coingeckoId || (coin.market && coin.market.id)
+        })).sort((a, b) => {
+          const capA = parseFloat(a.marketCap) || 0;
+          const capB = parseFloat(b.marketCap) || 0;
+          return capB - capA;
+        });
+
+        detailedCoinsLoaded = true;
+        renderDetailedCoins();
+        updateDetailedSortIndicators();
+      } catch (error) {
+        console.error('Error loading detailed coins:', error);
+        detailedList.innerHTML = '<tr><td colspan="7" class="status">Error loading coins. Please try again.</td></tr>';
+      }
+    }
+
+    function sortDetailedCoins(coins) {
+      return coins.slice().sort((a, b) => {
+        let valA = a[detailedSortKey] || '';
+        let valB = b[detailedSortKey] || '';
+
+        if (detailedSortKey === 'price' || detailedSortKey === 'marketCap' || detailedSortKey === 'change7d') {
+          valA = parseFloat(valA) || 0;
+          valB = parseFloat(valB) || 0;
+          return detailedSortDirection === 'asc' ? valA - valB : valB - valA;
+        }
+
+        valA = String(valA).toLowerCase();
+        valB = String(valB).toLowerCase();
+        return detailedSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      });
+    }
+
+    function renderDetailedCoins() {
+      const filteredCoins = detailedSearchQuery
+        ? allCombinedCoins.filter((coin) => {
+            const text = `${coin.name || ''} ${coin.symbol || ''} ${coin.algo || ''}`.toLowerCase();
+            return text.includes(detailedSearchQuery);
+          })
+        : allCombinedCoins;
+      const sortedCoins = sortDetailedCoins(filteredCoins);
+
+
+      detailedList.innerHTML = '';
+
+      if (!sortedCoins || sortedCoins.length === 0) {
+        detailedList.innerHTML = '<tr><td colspan="7" class="status">No coins matched your search.</td></tr>';
+        return;
+      }
+
+      sortedCoins.forEach((coin, index) => {
+        const row = document.createElement('tr');
+        const coinName = escapeHtml(coin.name || 'Unknown');
+        const coinSymbol = escapeHtml(coin.symbol || 'n/a');
+        const algo = escapeHtml(coin.algo || 'n/a');
+        const price = formatPrice(coin.price);
+        const change7d = formatPercent(coin.change7d);
+        const marketCap = formatCap(coin.marketCap);
+        const iconKey = iconKeyForCoinName(coin.name || 'Unknown');
+        const sharedIcon = powResolvedIconsByName.get(iconKey) || '';
+        const iconCandidates = sharedIcon ? [sharedIcon] : buildPowIconCandidates(coin);
+        const iconUrl = iconCandidates[0] || '';
+        const fallbackInitial = escapeHtml((coin.name || '?').charAt(0).toUpperCase());
+
+        row.innerHTML = `
+          <td class="col-index">${index + 1}</td>
+          <td>
+            <div class="coin-cell">
+              <span class="coin-badge">
+                ${iconUrl ? `<img class="coin-logo" src="${escapeHtml(iconUrl)}" alt="${coinName} icon" loading="lazy" decoding="async" fetchpriority="low" data-icon-key="${escapeHtml(iconKey)}" data-icon-candidates="${escapeHtml(iconCandidates.join('|'))}" data-icon-index="0" onload="onPowIconLoad(this)" onerror="onPowIconError(this)">` : ''}
+                <span class="coin-dot fallback" style="display:${iconUrl ? 'none' : 'inline-flex'};">${fallbackInitial}</span>
+              </span>
+              <span class="coin-name">${coinName}</span>
+            </div>
+          </td>
+          <td class="metric small">${coinSymbol}</td>
+          <td class="metric">${algo}</td>
+          <td class="metric">${price}</td>
+          <td class="metric small">${change7d}</td>
+          <td class="metric">${marketCap}</td>
+        `;
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => {
+          openCoinDetail(coin);
+        });
+        detailedList.appendChild(row);
+      });
+    }
+
+    function openCoinDetail(coin) {
+      let url = '';
+      
+      // Try to use coingeckoId first, otherwise construct from name
+      if (coin.coingeckoId) {
+        url = `https://www.coingecko.com/en/coins/${coin.coingeckoId}`;
+      } else {
+        // Create a slug from the coin symbol/name
+        const slug = (coin.symbol || coin.name || 'unknown').toLowerCase().replace(/[^a-z0-9]/g, '-');
+        url = `https://www.coingecko.com/en/search?query=${encodeURIComponent(coin.name || coin.symbol || 'Unknown')}`;
+      }
+
+      // Open in external browser
+      if (window.api && window.api.openExternal) {
+        window.api.openExternal(url);
+      } else {
+        // Fallback for browsers without Electron
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    }
+
+    function startSplashScreen() {
+      const splash = document.getElementById('startup-splash');
+      const fill = document.getElementById('splash-bar-fill');
+      const status = document.getElementById('splash-status');
+      const durationMs = 7000;
+
+      if (!splash || !fill) return;
+
+      const barContainer = splash.querySelector('[role="progressbar"]');
+      const start = performance.now();
+
+      function step(now) {
+        const elapsed = now - start;
+        const progress = Math.min(1, elapsed / durationMs);
+        const percent = Math.round(progress * 100);
+        fill.style.width = `${percent}%`;
+        if (barContainer) {
+          barContainer.setAttribute('aria-valuenow', String(percent));
+        }
+        if (status) {
+          status.textContent = `Starting up and preloading Proof of Work data... ${percent}%`;
+        }
+        if (progress < 1) {
+          requestAnimationFrame(step);
+          return;
+        }
+        splash.classList.add('hidden');
+        setTimeout(() => {
+          if (splash && splash.parentElement) {
+            splash.parentElement.removeChild(splash);
+          }
+        }, 600);
+      }
+
+      requestAnimationFrame(step);
+    }
+
+    function startApp() {
+      // Begin both data pipelines immediately while splash is visible.
+      loadCoins();
+      ensurePowDirectoryLoaded();
+      startSplashScreen();
+      setInterval(loadCoins, 60000); // Refresh every 60 seconds
+    }
+
+    startApp();
+  </script>
+</body>
+</html>

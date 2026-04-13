@@ -1,0 +1,29 @@
+# How to build installable releases
+
+1. Install dependencies:
+   npm ci
+
+2. Build for all supported targets on the current machine:
+   npm run dist
+
+3. Build Windows installer only:
+   npm run dist:win
+
+4. Build macOS artifacts only:
+   npm run dist:mac
+
+5. GitHub Actions:
+   Push to main, create a tag such as v1.0.0, or run the workflow manually.
+
+Generated artifacts are written to the dist folder and uploaded by the workflow as GitHub Actions artifacts.
+
+Optional signing secrets for GitHub Actions:
+- WINDOWS_CSC_LINK
+- WINDOWS_CSC_KEY_PASSWORD
+- MACOS_CSC_LINK
+- MACOS_CSC_KEY_PASSWORD
+- APPLE_ID
+- APPLE_APP_SPECIFIC_PASSWORD
+- APPLE_TEAM_ID
+
+If those secrets are present, Windows installers will be code-signed and macOS artifacts will be signed and notarized.
