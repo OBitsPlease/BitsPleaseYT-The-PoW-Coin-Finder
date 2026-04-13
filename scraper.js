@@ -1,20 +1,78 @@
 const fetch = require('node-fetch');
 const { JSDOM } = require('jsdom');
 const fs = require('fs');
-const DEBUG_LOG = 'debug.log';
+const path = require('path');
+const os = require('os');
+const vm = require('vm');
+
+const DEBUG_LOG = path.join(os.tmpdir(), 'pow-finder-debug.log');
+
 function logDebug(msg) {
-  fs.appendFileSync(DEBUG_LOG, msg + '\n');
+  try {
+    fs.appendFileSync(DEBUG_LOG, msg + '\n');
+  } catch (_) {
+    // Avoid crashing data loading if logging is not writable.
+  }
 }
 
 const ANNOUNCEMENT_URL = 'https://bitcointalk.org/index.php?board=159.0';
 const MPS_HOME_URL = 'https://miningpoolstats.stream/';
 const MPS_DATA_URL_REGEX = /https:\/\/data\.miningpoolstats\.stream\/data\/coins_data\.js\?t=\d+/i;
 const MPS_CACHE_TTL_MS = 30 * 60 * 1000;
+const DEFAULT_TIMEOUT_MS = 15000;
+const BT_THREAD_CONCURRENCY = 6;
+const BT_MAX_THREADS = 90;
 
 let mpsCache = {
   timestamp: 0,
   data: null
 };
+
+async function fetchTextWithTimeout(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122 Safari/537.36'
+      }
+    });
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} for ${url}`);
+    }
+    return await res.text();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function parseMiningPoolStatsPayload(dataText) {
+  if (!dataText) throw new Error('MiningPoolStats returned empty payload');
+
+  try {
+    const parsed = JSON.parse(dataText);
+    if (parsed && Array.isArray(parsed.data)) return parsed.data;
+  } catch (_) {
+    // Fall through to JS payload parsing.
+  }
+
+  // coins_data.js is often JavaScript, e.g. "coinsData={...}".
+  const sandbox = {};
+  vm.createContext(sandbox);
+  vm.runInContext(`${dataText};this.__coinsData=(typeof coinsData!=="undefined"?coinsData:undefined);`, sandbox, { timeout: 2000 });
+  const jsParsed = sandbox.__coinsData;
+  if (jsParsed && Array.isArray(jsParsed.data)) return jsParsed.data;
+
+  throw new Error('MiningPoolStats returned invalid coin list data');
+}
+
+async function runBatched(items, concurrency, fn) {
+  for (let i = 0; i < items.length; i += concurrency) {
+    const batch = items.slice(i, i + concurrency);
+    await Promise.all(batch.map(fn));
+  }
+}
 
 function getDate7DaysAgo() {
   const d = new Date();
@@ -24,8 +82,7 @@ function getDate7DaysAgo() {
 
 async function extractLinksFromThread(threadUrl, fallbackDate) {
   try {
-    const res = await fetch(threadUrl);
-    const html = await res.text();
+    const html = await fetchTextWithTimeout(threadUrl, 12000);
     const dom = new JSDOM(html);
     const document = dom.window.document;
     const links = { website: '', github: '', explorer: '', firstPostText: '', listingDate: '' };
@@ -60,11 +117,14 @@ async function extractLinksFromThread(threadUrl, fallbackDate) {
 }
 
 async function fetchNewPOWCoins() {
-    // Clear log at start
-    fs.writeFileSync(DEBUG_LOG, '[DEBUG] fetchNewPOWCoins called\n');
+    // Clear log at start when possible.
+    try {
+      fs.writeFileSync(DEBUG_LOG, '[DEBUG] fetchNewPOWCoins called\n');
+    } catch (_) {
+      // Ignore logging failures.
+    }
   try {
-    const res = await fetch(ANNOUNCEMENT_URL);
-    const html = await res.text();
+    const html = await fetchTextWithTimeout(ANNOUNCEMENT_URL, 15000);
     logDebug('[DEBUG] First 20000 HTML chars: ' + html.slice(0, 20000));
     const dom = new JSDOM(html);
     const document = dom.window.document;
@@ -72,8 +132,8 @@ async function fetchNewPOWCoins() {
     // Select all thread rows by looking for <tr> with a <span id^="msg_"> (any td class)
     const rows = Array.from(document.querySelectorAll('tr')).filter(row => {
       return row.querySelector('span[id^="msg_"] a');
-    });
-    const threadPromises = [];
+    }).slice(0, BT_MAX_THREADS);
+    const threadTasks = [];
     const includeKeywordRegex = /(\bpow\b|proof\s*of\s*work|mineable|mining|miner|\bcpu\b|\bgpu\b|\basic\b|phone|\[(RE-)?ANN\]|\bann\b)/i;
     const excludeKeywordRegex = /(\bpos\b|proof\s*of\s*stake|staking|staked|stake\s*coin)/i;
     const now = new Date();
@@ -118,44 +178,52 @@ async function fetchNewPOWCoins() {
       // If not in title, try first post content
       if (!hasKeyword && link) {
         const threadUrl = link;
-        threadPromises.push(
-          extractLinksFromThread(threadUrl, dateText).then(links => {
-            let found = false;
-            const firstPostText = links && links.firstPostText ? links.firstPostText : '';
-            if (excludeKeywordRegex.test(firstPostText)) return null;
-            if (firstPostText && includeKeywordRegex.test(firstPostText)) found = true;
-            if (isRecent && found) {
-              foundAny = true;
-              return {
-                name: title,
-                bitcointalk: threadUrl,
-                date: links.listingDate || dateText,
-                ...links
-              };
-            }
-            return null;
-          })
-        );
+        threadTasks.push(async () => {
+          const links = await extractLinksFromThread(threadUrl, dateText);
+          let found = false;
+          const firstPostText = links && links.firstPostText ? links.firstPostText : '';
+          if (excludeKeywordRegex.test(firstPostText)) return null;
+          if (firstPostText && includeKeywordRegex.test(firstPostText)) found = true;
+          if (isRecent && found) {
+            foundAny = true;
+            return {
+              name: title,
+              bitcointalk: threadUrl,
+              date: links.listingDate || dateText,
+              ...links
+            };
+          }
+          return null;
+        });
         return;
       }
       if (hasKeyword && isRecent) {
         const threadUrl = link;
         foundAny = true;
-        threadPromises.push(
-          extractLinksFromThread(threadUrl, dateText).then(links => ({
+        threadTasks.push(async () => {
+          const links = await extractLinksFromThread(threadUrl, dateText);
+          return {
             name: title,
             bitcointalk: threadUrl,
             date: links.listingDate || dateText,
             ...links
-          }))
-        );
+          };
+        });
       }
     });
 
-    let results = await Promise.all(threadPromises);
+    const results = [];
+    await runBatched(threadTasks, BT_THREAD_CONCURRENCY, async (task) => {
+      try {
+        const value = await task();
+        if (value) results.push(value);
+      } catch (_) {
+        // Skip individual thread failures.
+      }
+    });
+
     // Remove nulls (from threads that didn't match in first post)
-    results = results.filter(Boolean);
-    return results;
+    return results.filter(Boolean);
   } catch (err) {
     return { error: err.message };
   }
@@ -177,8 +245,7 @@ function dedupeLinks(linkItems) {
 
 async function extractMiningPoolStatsLinks(pageUrl, symbol) {
   try {
-    const res = await fetch(pageUrl);
-    const html = await res.text();
+    const html = await fetchTextWithTimeout(pageUrl, 12000);
     const dom = new JSDOM(html);
     const document = dom.window.document;
 
@@ -236,21 +303,14 @@ async function extractMiningPoolStatsLinks(pageUrl, symbol) {
 }
 
 async function fetchMiningPoolStatsCoinRows() {
-  const homeRes = await fetch(MPS_HOME_URL);
-  const homeHtml = await homeRes.text();
+  const homeHtml = await fetchTextWithTimeout(MPS_HOME_URL, 15000);
   const dataUrlMatch = homeHtml.match(MPS_DATA_URL_REGEX);
   if (!dataUrlMatch) {
     throw new Error('MiningPoolStats data feed URL not found');
   }
 
-  const dataRes = await fetch(dataUrlMatch[0]);
-  const dataText = await dataRes.text();
-  const dataObj = JSON.parse(dataText);
-  if (!dataObj || !Array.isArray(dataObj.data)) {
-    throw new Error('MiningPoolStats returned invalid coin list data');
-  }
-
-  return dataObj.data;
+  const dataText = await fetchTextWithTimeout(dataUrlMatch[0], 15000);
+  return parseMiningPoolStatsPayload(dataText);
 }
 
 async function fetchMiningPoolStatsPOWCoins(options = {}) {

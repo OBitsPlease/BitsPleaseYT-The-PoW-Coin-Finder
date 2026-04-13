@@ -1219,9 +1219,23 @@
       detailedList.innerHTML = '<tr><td colspan="7" class="status">Loading all coins...</td></tr>';
 
       try {
-        // Fetch both data sources
-        const newCoins = await window.api.fetchCoins() || [];
-        const powCoins = await window.api.fetchPowDirectory() || [];
+        // Fetch both data sources, but do not block PoW Prices if New Listings fails.
+        const [newCoinsResult, powCoinsResult] = await Promise.allSettled([
+          window.api.fetchCoins(),
+          window.api.fetchPowDirectory()
+        ]);
+
+        const newCoins = newCoinsResult.status === 'fulfilled' && Array.isArray(newCoinsResult.value)
+          ? newCoinsResult.value
+          : [];
+        const powCoins = powCoinsResult.status === 'fulfilled' && Array.isArray(powCoinsResult.value)
+          ? powCoinsResult.value
+          : [];
+
+        if (!powCoins.length && !newCoins.length) {
+          detailedList.innerHTML = '<tr><td colspan="7" class="status">Error loading coins data. Please try again.</td></tr>';
+          return;
+        }
 
         // Combine and deduplicate by name
         const coinMap = new Map();
