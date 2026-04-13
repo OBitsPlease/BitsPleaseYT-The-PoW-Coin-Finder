@@ -17,11 +17,13 @@ function logDebug(msg) {
 
 const ANNOUNCEMENT_URL = 'https://bitcointalk.org/index.php?board=159.0';
 const MPS_HOME_URL = 'https://miningpoolstats.stream/';
-const MPS_DATA_URL_REGEX = /https:\/\/data\.miningpoolstats\.stream\/data\/coins_data\.js\?t=\d+/i;
+const MPS_DATA_URL_REGEX = /https?:\/\/data\.miningpoolstats\.stream\/data\/coins_data\.js[^"'\s]*/i;
 const MPS_CACHE_TTL_MS = 30 * 60 * 1000;
 const DEFAULT_TIMEOUT_MS = 15000;
-const BT_THREAD_CONCURRENCY = 6;
-const BT_MAX_THREADS = 90;
+const BT_THREAD_CONCURRENCY = 8;
+const BT_MAX_THREADS = 50;
+const BT_THREAD_TIMEOUT_MS = 8000;
+const BT_OVERALL_TIMEOUT_MS = 60000;
 
 let mpsCache = {
   timestamp: 0,
@@ -80,9 +82,9 @@ function getDate7DaysAgo() {
   return d;
 }
 
-async function extractLinksFromThread(threadUrl, fallbackDate) {
+async function extractLinksFromThread(threadUrl, fallbackDate, timeoutMs = BT_THREAD_TIMEOUT_MS) {
   try {
-    const html = await fetchTextWithTimeout(threadUrl, 12000);
+    const html = await fetchTextWithTimeout(threadUrl, timeoutMs);
     const dom = new JSDOM(html);
     const document = dom.window.document;
     const links = { website: '', github: '', explorer: '', firstPostText: '', listingDate: '' };
@@ -213,7 +215,7 @@ async function fetchNewPOWCoins() {
     });
 
     const results = [];
-    await runBatched(threadTasks, BT_THREAD_CONCURRENCY, async (task) => {
+    const batchPromise = runBatched(threadTasks, BT_THREAD_CONCURRENCY, async (task) => {
       try {
         const value = await task();
         if (value) results.push(value);
@@ -221,6 +223,9 @@ async function fetchNewPOWCoins() {
         // Skip individual thread failures.
       }
     });
+    // Cap total scan time so the UI never appears frozen.
+    const overallTimeout = new Promise(resolve => setTimeout(resolve, BT_OVERALL_TIMEOUT_MS));
+    await Promise.race([batchPromise, overallTimeout]);
 
     // Remove nulls (from threads that didn't match in first post)
     return results.filter(Boolean);
@@ -303,6 +308,15 @@ async function extractMiningPoolStatsLinks(pageUrl, symbol) {
 }
 
 async function fetchMiningPoolStatsCoinRows() {
+  // Try the direct data URL first (pattern is stable; timestamp just busts cache).
+  const directUrl = `https://data.miningpoolstats.stream/data/coins_data.js?t=${Math.floor(Date.now() / 1000)}`;
+  try {
+    const dataText = await fetchTextWithTimeout(directUrl, 15000);
+    return parseMiningPoolStatsPayload(dataText);
+  } catch (_) {
+    // Direct fetch failed — fall back to scraping the homepage for the URL.
+  }
+
   const homeHtml = await fetchTextWithTimeout(MPS_HOME_URL, 15000);
   const dataUrlMatch = homeHtml.match(MPS_DATA_URL_REGEX);
   if (!dataUrlMatch) {
