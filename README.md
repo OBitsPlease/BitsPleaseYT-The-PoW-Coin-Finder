@@ -54,3 +54,12 @@ To produce signed installers in GitHub Actions, add these repository secrets:
 - APPLE_TEAM_ID: Your Apple Developer Team ID
 
 Without those secrets, GitHub Actions still builds unsigned artifacts. macOS unsigned builds may require right-click Open on first launch.
+
+## No Signers Available
+
+If you do not have signing certificates yet, you can still ship installable builds.
+
+- Windows: unsigned NSIS installer is still generated
+- macOS: unsigned DMG and ZIP are still generated
+
+The workflow automatically detects missing signing secrets and falls back to unsigned builds.
