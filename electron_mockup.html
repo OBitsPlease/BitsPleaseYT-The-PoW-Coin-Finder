@@ -147,6 +147,20 @@
       max-width: 40vw;
     }
 
+    .algo-legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: 6px;
+      font-size: 12px;
+      color: #9ec2e4;
+      white-space: nowrap;
+    }
+
+    .algo-legend .algo-confidence {
+      margin-left: -2px;
+    }
+
     .table-wrap {
       overflow-x: auto;
     }
@@ -536,6 +550,12 @@
         <option value="algo-asc">Algorithm A-Z</option>
         <option value="algo-desc">Algorithm Z-A</option>
       </select>
+      <div class="algo-legend" id="algo-confidence-legend" aria-label="Algorithm confidence legend">
+        <span>Confidence:</span>
+        <span class="algo-confidence conf-high" title="Matched against MiningPoolStats data">High</span>
+        <span class="algo-confidence conf-med" title="Parsed from explicit ANN algorithm field">Med</span>
+        <span class="algo-confidence conf-low" title="Inferred from ANN keyword pattern">Low</span>
+      </div>
       <div class="search-wrap" id="pow-search-wrap">
         <label for="pow-search">Search:</label>
         <input id="pow-search" type="text" placeholder="Name, symbol, algorithm">
@@ -637,6 +657,7 @@
 
     const sortLabel = document.querySelector('label[for="sort-select"]');
     const sortSelect = document.getElementById('sort-select');
+    const algoConfidenceLegend = document.getElementById('algo-confidence-legend');
     const navPow = document.getElementById('nav-pow');
     const navNew = document.getElementById('nav-new');
     const navDetailed = document.getElementById('nav-detailed');
@@ -736,6 +757,7 @@
 
       if (sortLabel) sortLabel.style.display = isNew ? 'inline' : 'none';
       if (sortSelect) sortSelect.style.display = isNew ? 'inline-block' : 'none';
+      if (algoConfidenceLegend) algoConfidenceLegend.style.display = isNew ? 'inline-flex' : 'none';
       if (powSearchWrap) powSearchWrap.style.display = isPow ? 'inline-flex' : 'none';
       if (detailedSearchWrap) detailedSearchWrap.style.display = isDetailed ? 'flex' : 'none';
     }
