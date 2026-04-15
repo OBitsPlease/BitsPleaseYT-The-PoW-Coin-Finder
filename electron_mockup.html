@@ -496,6 +496,8 @@
       <select id="sort-select">
         <option value="newest" selected>Newest to Oldest</option>
         <option value="oldest">Oldest to Newest</option>
+        <option value="algo-asc">Algorithm A-Z</option>
+        <option value="algo-desc">Algorithm Z-A</option>
       </select>
       <div class="search-wrap" id="pow-search-wrap">
         <label for="pow-search">Search:</label>
@@ -511,6 +513,7 @@
               <th>#</th>
               <th>Coin</th>
               <th>Price</th>
+              <th>Algorithm</th>
               <th>Listed</th>
               <th>Thread</th>
               <th>Links</th>
@@ -518,7 +521,7 @@
           </thead>
           <tbody id="coin-list">
             <tr>
-              <td colspan="6" class="status">Loading...</td>
+              <td colspan="7" class="status">Loading...</td>
             </tr>
           </tbody>
         </table>
@@ -984,23 +987,23 @@
 
     async function loadCoins() {
       const list = document.getElementById('coin-list');
-      list.innerHTML = '<tr><td colspan="6" class="status">Loading...</td></tr>';
+      list.innerHTML = '<tr><td colspan="7" class="status">Loading...</td></tr>';
 
       let coins = await window.api.fetchCoins();
       if (coins && coins.error && /login|session|captcha/i.test(coins.error)) {
         // If login required, prompt user
         await window.api.promptLogin();
-        list.innerHTML = '<tr><td colspan="6" class="status">Login required. Please log in and try again.</td></tr>';
+        list.innerHTML = '<tr><td colspan="7" class="status">Login required. Please log in and try again.</td></tr>';
         return;
       }
 
       if (!Array.isArray(coins)) {
-        list.innerHTML = '<tr><td colspan="6" class="status">Error fetching coins: ' + escapeHtml(coins.error || 'Unknown error') + '</td></tr>';
+        list.innerHTML = '<tr><td colspan="7" class="status">Error fetching coins: ' + escapeHtml(coins.error || 'Unknown error') + '</td></tr>';
         return;
       }
 
       if (coins.length === 0) {
-        list.innerHTML = '<tr><td colspan="6" class="status">No new POW coins found.</td></tr>';
+        list.innerHTML = '<tr><td colspan="7" class="status">No new POW coins found.</td></tr>';
         return;
       }
 
@@ -1014,12 +1017,25 @@
       });
 
       if (coins.length === 0) {
-        list.innerHTML = '<tr><td colspan="6" class="status">No newly listed POW coins in the last 30 days.</td></tr>';
+        list.innerHTML = '<tr><td colspan="7" class="status">No newly listed POW coins in the last 30 days.</td></tr>';
         return;
       }
 
-      // Sort coins by date
+      coins = await enrichMarketData(coins);
+
       coins.sort((a, b) => {
+        if (currentSort === 'algo-asc' || currentSort === 'algo-desc') {
+          const algoA = String(a.algo || '').trim().toLowerCase();
+          const algoB = String(b.algo || '').trim().toLowerCase();
+          const aMissing = !algoA;
+          const bMissing = !algoB;
+          if (aMissing && bMissing) return 0;
+          if (aMissing) return 1;
+          if (bMissing) return -1;
+          const compare = algoA.localeCompare(algoB, undefined, { sensitivity: 'base' });
+          return currentSort === 'algo-asc' ? compare : -compare;
+        }
+
         const da = parseListingDate(a.date || '');
         const db = parseListingDate(b.date || '');
         if (!da && !db) return 0;
@@ -1027,8 +1043,6 @@
         if (!db) return -1;
         return currentSort === 'newest' ? db.getTime() - da.getTime() : da.getTime() - db.getTime();
       });
-
-      coins = await enrichMarketData(coins);
 
       list.innerHTML = '';
 
@@ -1058,6 +1072,7 @@
         const nameInitial = escapeHtml(cleanName.charAt(0).toUpperCase() || '?');
         const logoUrl = logoUrlForCoin(coin);
         const market = coin.market || null;
+        const algoText = escapeHtml(coin.algo || 'n/a');
 
         const priceCell = formatPrice(market && market.current_price);
 
@@ -1073,6 +1088,7 @@
             </div>
           </td>
           <td class="metric">${priceCell}</td>
+          <td class="metric small">${algoText}</td>
           <td class="coin-date">${escapeHtml(shortDate || 'Unknown')}</td>
           <td class="source-link">${bitcointalk ? `<a href="${escapeHtml(bitcointalk)}" target="_blank" rel="noopener noreferrer">Open Thread</a>` : '<span class="empty-links">n/a</span>'}</td>
           <td>${links ? `<div class="links">${links}</div>` : '<span class="empty-links">No links found</span>'}</td>

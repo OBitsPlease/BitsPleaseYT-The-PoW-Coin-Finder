@@ -118,6 +118,139 @@ async function extractLinksFromThread(threadUrl, fallbackDate, timeoutMs = BT_TH
   }
 }
 
+const ALGO_PATTERNS = [
+  { label: 'RandomX', regex: /\brandomx\b/i },
+  { label: 'KawPow', regex: /\bkawpow\b/i },
+  { label: 'GhostRider', regex: /\bghostrider\b/i },
+  { label: 'VerusHash', regex: /\bverus\s*hash\b|\bverushash\b/i },
+  { label: 'Etchash', regex: /\betchash\b/i },
+  { label: 'Equihash', regex: /\bequihash\b/i },
+  { label: 'Yescrypt', regex: /\byescrypt\b/i },
+  { label: 'Yespower', regex: /\byespower\b/i },
+  { label: 'Scrypt', regex: /\bscrypt\b/i },
+  { label: 'X11', regex: /\bx11\b/i },
+  { label: 'X16R', regex: /\bx16r\b/i },
+  { label: 'X16Rv2', regex: /\bx16rv2\b/i },
+  { label: 'Xevan', regex: /\bxevan\b/i },
+  { label: 'Lyra2REv3', regex: /\blyra2\s*rev?3\b|\blyra2rev3\b/i },
+  { label: 'Lyra2z', regex: /\blyra2z\b/i },
+  { label: 'SHA-256d', regex: /\bsha\s*[- ]?256d\b|\bsha256d\b/i },
+  { label: 'SHA-256', regex: /\bsha\s*[- ]?256\b|\bsha256\b/i },
+  { label: 'Blake3', regex: /\bblake\s*3\b|\bblake3\b/i },
+  { label: 'Blake2s', regex: /\bblake\s*2s\b|\bblake2s\b/i },
+  { label: 'CryptoNight', regex: /\bcryptonight\b/i },
+  { label: 'Argon2d', regex: /\bargon2d\b/i }
+];
+
+const SYMBOL_IGNORE = new Set(['ANN', 'RE', 'POW', 'POS', 'GPU', 'CPU', 'ASIC', 'NEW', 'COIN', 'TESTNET', 'MAINNET']);
+
+function normalizeLookupText(text) {
+  return String(text || '')
+    .toLowerCase()
+    .replace(/\[(re-)?ann\]/gi, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function cleanAnnouncementCoinName(title) {
+  return String(title || '')
+    .replace(/\[(RE-)?ANN\]/ig, ' ')
+    .replace(/\([^)]{1,16}\)/g, ' ')
+    .replace(/\[[^\]]{1,16}\]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function detectAlgorithmFromText(text) {
+  const sourceText = String(text || '');
+  if (!sourceText) return '';
+
+  const explicit = sourceText.match(/\b(?:algo|algorithm)\s*[:\-]\s*([a-z0-9+\/-][a-z0-9+\/-\s]{1,38})/i);
+  if (explicit && explicit[1]) {
+    const cleaned = explicit[1]
+      .split(/[\r\n|;,]/)[0]
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (cleaned) return cleaned;
+  }
+
+  for (const entry of ALGO_PATTERNS) {
+    if (entry.regex.test(sourceText)) {
+      return entry.label;
+    }
+  }
+
+  return '';
+}
+
+function extractTickerCandidates(title, firstPostText) {
+  const candidates = [];
+  const titleText = String(title || '');
+  const postText = String(firstPostText || '');
+
+  const pushCandidate = (value) => {
+    const ticker = String(value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
+    if (!ticker || ticker.length < 2 || ticker.length > 10) return;
+    if (SYMBOL_IGNORE.has(ticker)) return;
+    if (!candidates.includes(ticker)) candidates.push(ticker);
+  };
+
+  const parenMatches = [...titleText.matchAll(/\(([A-Za-z0-9]{2,10})\)/g)];
+  parenMatches.forEach(match => pushCandidate(match[1]));
+
+  const bracketMatches = [...titleText.matchAll(/\[([A-Za-z0-9]{2,10})\]/g)];
+  bracketMatches.forEach(match => pushCandidate(match[1]));
+
+  const explicitSymbol = postText.match(/\b(?:ticker|symbol)\s*[:\-]\s*([A-Za-z0-9]{2,10})\b/i);
+  if (explicitSymbol && explicitSymbol[1]) {
+    pushCandidate(explicitSymbol[1]);
+  }
+
+  return candidates;
+}
+
+function buildMpsAlgoLookup(rows) {
+  const nameMap = new Map();
+  const symbolMap = new Map();
+
+  (rows || []).forEach(row => {
+    const algo = String(row && row.algo ? row.algo : '').trim();
+    if (!algo) return;
+
+    const normalizedName = normalizeLookupText(row.name || '');
+    if (normalizedName && !nameMap.has(normalizedName)) {
+      nameMap.set(normalizedName, algo);
+    }
+
+    const symbol = String(row.symbol || '').toUpperCase().trim();
+    if (symbol && !symbolMap.has(symbol)) {
+      symbolMap.set(symbol, algo);
+    }
+  });
+
+  return { nameMap, symbolMap };
+}
+
+function resolveCoinAlgorithm(coin, algoLookup) {
+  const lookup = algoLookup || { nameMap: new Map(), symbolMap: new Map() };
+
+  const tickerCandidates = extractTickerCandidates(coin && coin.name, coin && coin.firstPostText);
+  for (const ticker of tickerCandidates) {
+    if (lookup.symbolMap.has(ticker)) {
+      return lookup.symbolMap.get(ticker);
+    }
+  }
+
+  const cleanedName = cleanAnnouncementCoinName(coin && coin.name);
+  const normalizedName = normalizeLookupText(cleanedName);
+  if (normalizedName && lookup.nameMap.has(normalizedName)) {
+    return lookup.nameMap.get(normalizedName);
+  }
+
+  return detectAlgorithmFromText(`${coin && coin.name ? coin.name : ''}\n${coin && coin.firstPostText ? coin.firstPostText : ''}`);
+}
+
 async function fetchNewPOWCoins() {
     // Clear log at start when possible.
     try {
@@ -227,8 +360,23 @@ async function fetchNewPOWCoins() {
     const overallTimeout = new Promise(resolve => setTimeout(resolve, BT_OVERALL_TIMEOUT_MS));
     await Promise.race([batchPromise, overallTimeout]);
 
-    // Remove nulls (from threads that didn't match in first post)
-    return results.filter(Boolean);
+    const normalizedResults = results.filter(Boolean);
+    if (!normalizedResults.length) {
+      return normalizedResults;
+    }
+
+    let algoLookup = { nameMap: new Map(), symbolMap: new Map() };
+    try {
+      const mpsRows = await fetchMiningPoolStatsCoinRows();
+      algoLookup = buildMpsAlgoLookup(mpsRows);
+    } catch (_) {
+      // Keep loading new listings even if MiningPoolStats is unavailable.
+    }
+
+    return normalizedResults.map(coin => ({
+      ...coin,
+      algo: resolveCoinAlgorithm(coin, algoLookup)
+    }));
   } catch (err) {
     return { error: err.message };
   }
