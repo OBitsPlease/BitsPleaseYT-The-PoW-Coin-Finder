@@ -1,7 +1,7 @@
 {
   "name": "bitspleaseyt-the-pow-coin-finder",
   "productName": "BitsPleaseYT The PoW Coin Finder.",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "BitsPleaseYT The PoW Coin Finder. - Electron app to list newly announced POW coins",
   "main": "main.js",
   "scripts": {
