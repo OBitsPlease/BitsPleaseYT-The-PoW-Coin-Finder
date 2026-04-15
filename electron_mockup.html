@@ -287,6 +287,43 @@
       min-width: 82px;
     }
 
+    .algo-cell {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .algo-confidence {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 2px 7px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid transparent;
+      line-height: 1.4;
+    }
+
+    .algo-confidence.conf-high {
+      color: #08261b;
+      background: #52d6a2;
+      border-color: #3ec18f;
+    }
+
+    .algo-confidence.conf-med {
+      color: #112133;
+      background: #8dbfea;
+      border-color: #75a9d5;
+    }
+
+    .algo-confidence.conf-low {
+      color: #3a2809;
+      background: #f0bf6e;
+      border-color: #d8a85a;
+    }
+
     .muted {
       color: #6f8aa4;
     }
@@ -739,6 +776,20 @@
         .trim() || 'Unknown Coin';
     }
 
+    function getAlgoConfidenceMeta(source) {
+      const key = String(source || '').toLowerCase();
+      if (key === 'mps-symbol' || key === 'mps-name') {
+        return { label: 'High', className: 'conf-high', title: 'Matched against MiningPoolStats data' };
+      }
+      if (key === 'ann-explicit') {
+        return { label: 'Med', className: 'conf-med', title: 'Parsed from explicit ANN algorithm field' };
+      }
+      if (key === 'ann-pattern') {
+        return { label: 'Low', className: 'conf-low', title: 'Inferred from ANN keyword pattern' };
+      }
+      return null;
+    }
+
     function shortenDate(dateStr) {
       if (!dateStr) return '';
       const match = dateStr.match(/(Today|Yesterday)|((Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+\d{1,2},?\s*\d{4})|(\d{1,2}\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*,?\s*\d{4})|(\d{4}-\d{2}-\d{2})/i);
@@ -1073,6 +1124,10 @@
         const logoUrl = logoUrlForCoin(coin);
         const market = coin.market || null;
         const algoText = escapeHtml(coin.algo || 'n/a');
+        const confidence = getAlgoConfidenceMeta(coin.algoSource);
+        const confidenceBadge = confidence
+          ? `<span class="algo-confidence ${escapeHtml(confidence.className)}" title="${escapeHtml(confidence.title)}">${escapeHtml(confidence.label)}</span>`
+          : '';
 
         const priceCell = formatPrice(market && market.current_price);
 
@@ -1088,7 +1143,7 @@
             </div>
           </td>
           <td class="metric">${priceCell}</td>
-          <td class="metric small">${algoText}</td>
+          <td class="metric small"><span class="algo-cell"><span>${algoText}</span>${confidenceBadge}</span></td>
           <td class="coin-date">${escapeHtml(shortDate || 'Unknown')}</td>
           <td class="source-link">${bitcointalk ? `<a href="${escapeHtml(bitcointalk)}" target="_blank" rel="noopener noreferrer">Open Thread</a>` : '<span class="empty-links">n/a</span>'}</td>
           <td>${links ? `<div class="links">${links}</div>` : '<span class="empty-links">No links found</span>'}</td>

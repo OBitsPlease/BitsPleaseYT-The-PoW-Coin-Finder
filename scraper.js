@@ -164,7 +164,7 @@ function cleanAnnouncementCoinName(title) {
 
 function detectAlgorithmFromText(text) {
   const sourceText = String(text || '');
-  if (!sourceText) return '';
+  if (!sourceText) return { algo: '', source: 'unknown' };
 
   const explicit = sourceText.match(/\b(?:algo|algorithm)\s*[:\-]\s*([a-z0-9+\/-][a-z0-9+\/-\s]{1,38})/i);
   if (explicit && explicit[1]) {
@@ -172,16 +172,16 @@ function detectAlgorithmFromText(text) {
       .split(/[\r\n|;,]/)[0]
       .replace(/\s+/g, ' ')
       .trim();
-    if (cleaned) return cleaned;
+    if (cleaned) return { algo: cleaned, source: 'ann-explicit' };
   }
 
   for (const entry of ALGO_PATTERNS) {
     if (entry.regex.test(sourceText)) {
-      return entry.label;
+      return { algo: entry.label, source: 'ann-pattern' };
     }
   }
 
-  return '';
+  return { algo: '', source: 'unknown' };
 }
 
 function extractTickerCandidates(title, firstPostText) {
@@ -238,14 +238,14 @@ function resolveCoinAlgorithm(coin, algoLookup) {
   const tickerCandidates = extractTickerCandidates(coin && coin.name, coin && coin.firstPostText);
   for (const ticker of tickerCandidates) {
     if (lookup.symbolMap.has(ticker)) {
-      return lookup.symbolMap.get(ticker);
+      return { algo: lookup.symbolMap.get(ticker), source: 'mps-symbol' };
     }
   }
 
   const cleanedName = cleanAnnouncementCoinName(coin && coin.name);
   const normalizedName = normalizeLookupText(cleanedName);
   if (normalizedName && lookup.nameMap.has(normalizedName)) {
-    return lookup.nameMap.get(normalizedName);
+    return { algo: lookup.nameMap.get(normalizedName), source: 'mps-name' };
   }
 
   return detectAlgorithmFromText(`${coin && coin.name ? coin.name : ''}\n${coin && coin.firstPostText ? coin.firstPostText : ''}`);
@@ -373,10 +373,14 @@ async function fetchNewPOWCoins() {
       // Keep loading new listings even if MiningPoolStats is unavailable.
     }
 
-    return normalizedResults.map(coin => ({
-      ...coin,
-      algo: resolveCoinAlgorithm(coin, algoLookup)
-    }));
+    return normalizedResults.map(coin => {
+      const algoInfo = resolveCoinAlgorithm(coin, algoLookup);
+      return {
+        ...coin,
+        algo: algoInfo.algo || '',
+        algoSource: algoInfo.source || 'unknown'
+      };
+    });
   } catch (err) {
     return { error: err.message };
   }
