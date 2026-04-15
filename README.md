@@ -2,6 +2,15 @@
 
 This is an Electron-based desktop app that displays newly listed and actively tracked Proof of Work (POW) coins with a modern desktop interface.
 
+## Release Notes
+
+### 1.0.4
+
+- Added an Algorithm column to New Listings.
+- Added New Listings sorting by algorithm.
+- Added algorithm confidence badges and legend for new listings.
+- Improved algorithm detection by prioritizing clear ANN title and post matches before fallback mapping.
+
 ## How to Run
 
 1. Make sure you have Node.js installed: https://nodejs.org/
