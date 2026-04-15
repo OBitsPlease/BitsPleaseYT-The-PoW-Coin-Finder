@@ -4,6 +4,12 @@ This is an Electron-based desktop app that displays newly listed and actively tr
 
 ## Release Notes
 
+### 1.0.5
+
+- Bumped app and installer version to 1.0.5.
+- Configured a real Windows app and installer icon via build/icon.ico.
+- Cleaned and refreshed installer output artifacts before release build.
+
 ### 1.0.4
 
 - Added an Algorithm column to New Listings.
