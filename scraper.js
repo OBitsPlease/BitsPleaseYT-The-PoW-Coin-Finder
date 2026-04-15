@@ -166,18 +166,30 @@ function detectAlgorithmFromText(text) {
   const sourceText = String(text || '');
   if (!sourceText) return { algo: '', source: 'unknown' };
 
+  for (const entry of ALGO_PATTERNS) {
+    if (entry.regex.test(sourceText)) {
+      return { algo: entry.label, source: 'ann-pattern' };
+    }
+  }
+
   const explicit = sourceText.match(/\b(?:algo|algorithm)\s*[:\-]\s*([a-z0-9+\/-][a-z0-9+\/-\s]{1,38})/i);
   if (explicit && explicit[1]) {
     const cleaned = explicit[1]
       .split(/[\r\n|;,]/)[0]
       .replace(/\s+/g, ' ')
       .trim();
-    if (cleaned) return { algo: cleaned, source: 'ann-explicit' };
-  }
+    if (cleaned) {
+      for (const entry of ALGO_PATTERNS) {
+        if (entry.regex.test(cleaned)) {
+          return { algo: entry.label, source: 'ann-explicit' };
+        }
+      }
 
-  for (const entry of ALGO_PATTERNS) {
-    if (entry.regex.test(sourceText)) {
-      return { algo: entry.label, source: 'ann-pattern' };
+      // Keep explicit values only when they look like a short algorithm label.
+      const looksLikeLabel = /^[a-z0-9+\/-]+(?:\s+[a-z0-9+\/-]+){0,2}$/i.test(cleaned);
+      if (looksLikeLabel) {
+        return { algo: cleaned, source: 'ann-explicit' };
+      }
     }
   }
 
@@ -235,6 +247,12 @@ function buildMpsAlgoLookup(rows) {
 function resolveCoinAlgorithm(coin, algoLookup) {
   const lookup = algoLookup || { nameMap: new Map(), symbolMap: new Map() };
 
+  const titleAndPost = `${coin && coin.name ? coin.name : ''}\n${coin && coin.firstPostText ? coin.firstPostText : ''}`;
+  const fromAnnouncement = detectAlgorithmFromText(titleAndPost);
+  if (fromAnnouncement.algo) {
+    return fromAnnouncement;
+  }
+
   const tickerCandidates = extractTickerCandidates(coin && coin.name, coin && coin.firstPostText);
   for (const ticker of tickerCandidates) {
     if (lookup.symbolMap.has(ticker)) {
@@ -248,7 +266,7 @@ function resolveCoinAlgorithm(coin, algoLookup) {
     return { algo: lookup.nameMap.get(normalizedName), source: 'mps-name' };
   }
 
-  return detectAlgorithmFromText(`${coin && coin.name ? coin.name : ''}\n${coin && coin.firstPostText ? coin.firstPostText : ''}`);
+  return { algo: '', source: 'unknown' };
 }
 
 async function fetchNewPOWCoins() {
