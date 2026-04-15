@@ -17,6 +17,10 @@ This is an Electron-based desktop app that displays newly listed and actively tr
 - Added algorithm confidence badges and legend for new listings.
 - Improved algorithm detection by prioritizing clear ANN title and post matches before fallback mapping.
 
+## Release Workflow
+
+Use [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the step-by-step 1.0.x release process.
+
 ## How to Run
 
 1. Make sure you have Node.js installed: https://nodejs.org/
