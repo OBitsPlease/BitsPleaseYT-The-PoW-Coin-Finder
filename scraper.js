@@ -634,22 +634,103 @@ async function fetchMiningPoolStatsPOWCoins(options = {}) {
   }
 }
 
-// Demo/fallback data for when WhatToMine is unavailable (development/maintenance mode)
+const WTM_ALGO_MATCHERS = {
+  kawpow: [ /\bkawpow\b/i ],
+  eth: [ /\bethash\b/i ],
+  etc: [ /\betchash\b/i ],
+  erg: [ /\bautolykos\b/i ],
+  firo: [ /\bfiropow\b/i ],
+  cfx: [ /\boctopus\b/i ],
+  zec: [ /\bzhash\b/i, /\bequihash\b/i ],
+  alph: [ /\bblake3\b/i ],
+  xmr: [ /\brandomx\b/i ],
+  rtm: [ /\bghostrider\b/i ],
+  sha256: [ /\bsha[- ]?256\b/i ],
+  ltc: [ /\bscrypt\b/i ]
+};
+
+const WTM_QUERY_CONFIG = {
+  kawpow: { endpoint: 'coins', toggle: 'kpw', hrField: 'kpw_hr', powerField: 'kpw_p' },
+  eth: { endpoint: 'coins', toggle: 'eth', hrField: 'eth_hr', powerField: 'eth_p' },
+  etc: { endpoint: 'coins', toggle: 'e4g', hrField: 'e4g_hr', powerField: 'e4g_p' },
+  erg: { endpoint: 'coins', toggle: 'al', hrField: 'al_hr', powerField: 'al_p' },
+  firo: { endpoint: 'coins', toggle: 'fpw', hrField: 'fpw_hr', powerField: 'fpw_p' },
+  zec: { endpoint: 'coins', toggle: 'zh', hrField: 'zh_hr', powerField: 'zh_p' },
+  alph: { endpoint: 'coins', toggle: 'b3', hrField: 'b3_hr', powerField: 'b3_p' },
+  xmr: { endpoint: 'cpu', toggle: 'rmx', hrField: 'rmx_hr', powerField: 'rmx_p' },
+  rtm: { endpoint: 'cpu', toggle: 'gr', hrField: 'gr_hr', powerField: 'gr_p' },
+  sha256: { endpoint: 'asic', toggle: 'sha256f', hrField: 'sha256_hr', powerField: 'sha256_p' },
+  ltc: { endpoint: 'asic', toggle: 'scryptf', hrField: 'scrypt_hash_rate', powerField: 'scrypt_power' }
+};
+
+// Fallback data when WhatToMine blocks parameterized requests.
 const DEMO_COINS = {
   kawpow: [
     { name: 'Ravencoin', tag: 'RVN', algorithm: 'KawPow', estimatedRewards: 1256, estimatedRewards24: 1256, btcRevenue: 0.00000012, btcRevenue24: 0.00000012, blockReward: 2500, blockTime: 60 },
-    { name: 'Neox', tag: 'NEOX', algorithm: 'KawPow', estimatedRewards: 485, estimatedRewards24: 485, btcRevenue: 0.00000008, btcRevenue24: 0.00000008, blockReward: 1024, blockTime: 64 }
+    { name: 'Neoxa', tag: 'NEOX', algorithm: 'KawPow', estimatedRewards: 485, estimatedRewards24: 485, btcRevenue: 0.00000008, btcRevenue24: 0.00000008, blockReward: 1024, blockTime: 64 }
   ],
   eth: [
-    { name: 'Ethash Coin', tag: 'ETH', algorithm: 'Ethash', estimatedRewards: 0.42, estimatedRewards24: 0.42, btcRevenue: 0.00000156, btcRevenue24: 0.00000156, blockReward: 2, blockTime: 12 }
+    { name: 'Ethereumpow', tag: 'ETHW', algorithm: 'Ethash', estimatedRewards: 0.42, estimatedRewards24: 0.42, btcRevenue: 0.00000156, btcRevenue24: 0.00000156, blockReward: 2, blockTime: 12 }
   ],
-  ltc: [
-    { name: 'Litecoin', tag: 'LTC', algorithm: 'Scrypt', estimatedRewards: 0.025, estimatedRewards24: 0.025, btcRevenue: 0.00000014, btcRevenue24: 0.00000014, blockReward: 6.25, blockTime: 600 }
+  etc: [
+    { name: 'Ethereum Classic', tag: 'ETC', algorithm: 'Etchash', estimatedRewards: 0.063, estimatedRewards24: 0.063, btcRevenue: 0.00000072, btcRevenue24: 0.00000072, blockReward: 2.048, blockTime: 13 }
+  ],
+  erg: [
+    { name: 'Ergo', tag: 'ERG', algorithm: 'Autolykos', estimatedRewards: 0.89, estimatedRewards24: 0.89, btcRevenue: 0.00000057, btcRevenue24: 0.00000057, blockReward: 18, blockTime: 120 }
+  ],
+  firo: [
+    { name: 'Firo', tag: 'FIRO', algorithm: 'FiroPow', estimatedRewards: 0.31, estimatedRewards24: 0.31, btcRevenue: 0.00000082, btcRevenue24: 0.00000082, blockReward: 6.25, blockTime: 300 }
+  ],
+  cfx: [
+    { name: 'Conflux', tag: 'CFX', algorithm: 'Octopus', estimatedRewards: 2.45, estimatedRewards24: 2.45, btcRevenue: 0.00000064, btcRevenue24: 0.00000064, blockReward: 2, blockTime: 30 }
+  ],
+  zec: [
+    { name: 'Zcash', tag: 'ZEC', algorithm: 'Equihash', estimatedRewards: 0.014, estimatedRewards24: 0.014, btcRevenue: 0.00000041, btcRevenue24: 0.00000041, blockReward: 1.5625, blockTime: 75 }
+  ],
+  alph: [
+    { name: 'Alephium', tag: 'ALPH', algorithm: 'Blake3', estimatedRewards: 0.56, estimatedRewards24: 0.56, btcRevenue: 0.00000020, btcRevenue24: 0.00000020, blockReward: 0.5, blockTime: 64 }
   ],
   xmr: [
     { name: 'Monero', tag: 'XMR', algorithm: 'RandomX', estimatedRewards: 0.0018, estimatedRewards24: 0.0018, btcRevenue: 0.00000004, btcRevenue24: 0.00000004, blockReward: 0.6, blockTime: 120 }
+  ],
+  rtm: [
+    { name: 'Raptoreum', tag: 'RTM', algorithm: 'GhostRider', estimatedRewards: 3.1, estimatedRewards24: 3.1, btcRevenue: 0.00000005, btcRevenue24: 0.00000005, blockReward: 1250, blockTime: 60 }
+  ],
+  sha256: [
+    { name: 'Bitcoin Cash', tag: 'BCH', algorithm: 'SHA-256', estimatedRewards: 0.00001, estimatedRewards24: 0.00001, btcRevenue: 0.00000210, btcRevenue24: 0.00000210, blockReward: 3.125, blockTime: 600 }
+  ],
+  ltc: [
+    { name: 'Litecoin', tag: 'LTC', algorithm: 'Scrypt', estimatedRewards: 0.025, estimatedRewards24: 0.025, btcRevenue: 0.00000014, btcRevenue24: 0.00000014, blockReward: 6.25, blockTime: 600 }
   ]
 };
+
+function mapWtmCoin(name, c) {
+  return {
+    name,
+    tag: c.tag || '',
+    algorithm: c.algorithm || '',
+    estimatedRewards: parseFloat(c.estimated_rewards) || 0,
+    estimatedRewards24: parseFloat(c.estimated_rewards24) || 0,
+    btcRevenue: parseFloat(c.btc_revenue) || 0,
+    btcRevenue24: parseFloat(c.btc_revenue24) || 0,
+    exchangeRate: parseFloat(c.exchange_rate) || 0,
+    profitability: parseFloat(c.profitability) || 0,
+    blockReward: parseFloat(c.block_reward) || 0,
+    blockTime: parseFloat(c.block_time) || 0,
+    nethash: c.nethash || 0,
+    status: c.status || '',
+    listed: !!c.listed
+  };
+}
+
+function filterCoinsByAlgo(coins, algoKey) {
+  const matchers = WTM_ALGO_MATCHERS[algoKey] || [];
+  if (!matchers.length) return [];
+  return coins.filter((coin) => {
+    const haystack = `${coin.algorithm || ''} ${coin.name || ''} ${coin.tag || ''}`;
+    return matchers.some((matcher) => matcher.test(haystack));
+  });
+}
 
 async function fetchWhatToMineProfitability(algoInputs) {
   // algoInputs: [{ key: string, hrValue: number, powerWatts: number }]
@@ -657,58 +738,65 @@ async function fetchWhatToMineProfitability(algoInputs) {
   const enabled = (algoInputs || []).filter(a => a && a.hrValue > 0);
   if (!enabled.length) return { coins: [], btcPrice: 0 };
 
-  // Build URL without URLSearchParams to preserve literal brackets that WhatToMine expects.
-  const parts = [];
-  enabled.forEach(({ key, hrValue, powerWatts }) => {
-    parts.push(`${encodeURIComponent(key)}=true`);
-    parts.push(`factor%5B${key}_hr%5D=${encodeURIComponent(hrValue)}`);
-    parts.push(`factor%5B${key}_p%5D=${encodeURIComponent(powerWatts || 0)}`);
-  });
-
-  const url = `https://whattomine.com/coins.json?${parts.join('&')}`;
-
   let coinsData = [];
   let btcPrice = 0;
-  let fetchFailed = false;
+  const endpointQueryParts = { coins: [], cpu: [], asic: [] };
+  const selectedKeys = enabled.map((item) => String(item.key || '').toLowerCase());
+
+  enabled.forEach(({ key, hrValue, powerWatts }) => {
+    const normalizedKey = String(key || '').toLowerCase();
+    const cfg = WTM_QUERY_CONFIG[normalizedKey];
+    if (!cfg || !endpointQueryParts[cfg.endpoint]) return;
+    endpointQueryParts[cfg.endpoint].push(`${encodeURIComponent(cfg.toggle)}=true`);
+    endpointQueryParts[cfg.endpoint].push(`factor%5B${cfg.hrField}%5D=${encodeURIComponent(hrValue)}`);
+    endpointQueryParts[cfg.endpoint].push(`factor%5B${cfg.powerField}%5D=${encodeURIComponent(powerWatts || 0)}`);
+  });
+
+  const rawCoinsByKey = new Map();
+
+  async function fetchEndpoint(endpointName, baseUrl, keysForEndpoint) {
+    if (!keysForEndpoint.length) return;
+    const parts = endpointQueryParts[endpointName];
+    if (!parts.length) return;
+    const text = await fetchTextWithTimeout(`${baseUrl}?${parts.join('&')}`, 15000);
+    const parsed = JSON.parse(text);
+    const mapped = parsed && parsed.coins
+      ? Object.entries(parsed.coins)
+          .filter(([, c]) => c && !c.lagging && (parseFloat(c.btc_revenue24 || c.btc_revenue) || 0) > 0)
+          .map(([name, c]) => mapWtmCoin(name, c))
+      : [];
+
+    keysForEndpoint.forEach((key) => {
+      rawCoinsByKey.set(key, filterCoinsByAlgo(mapped, key));
+    });
+  }
 
   try {
-    const text = await fetchTextWithTimeout(url, 15000);
-    const parsed = JSON.parse(text);
-    if (parsed && parsed.coins) {
-      coinsData = Object.entries(parsed.coins)
-        .filter(([, c]) => c && !c.lagging && (parseFloat(c.btc_revenue) || 0) > 0)
-        .map(([name, c]) => ({
-          name,
-          tag: c.tag || '',
-          algorithm: c.algorithm || '',
-          estimatedRewards: parseFloat(c.estimated_rewards) || 0,
-          estimatedRewards24: parseFloat(c.estimated_rewards24) || 0,
-          btcRevenue: parseFloat(c.btc_revenue) || 0,
-          btcRevenue24: parseFloat(c.btc_revenue24) || 0,
-          exchangeRate: parseFloat(c.exchange_rate) || 0,
-          profitability: parseFloat(c.profitability) || 0,
-          blockReward: parseFloat(c.block_reward) || 0,
-          blockTime: parseFloat(c.block_time) || 0,
-          nethash: c.nethash || 0,
-          status: c.status || '',
-          listed: !!c.listed
-        }))
-        .sort((a, b) => b.btcRevenue - a.btcRevenue);
-    }
+    await fetchEndpoint('coins', 'https://whattomine.com/coins.json', selectedKeys.filter((key) => WTM_QUERY_CONFIG[key] && WTM_QUERY_CONFIG[key].endpoint === 'coins'));
+    await fetchEndpoint('cpu', 'https://whattomine.com/cpu.json', selectedKeys.filter((key) => WTM_QUERY_CONFIG[key] && WTM_QUERY_CONFIG[key].endpoint === 'cpu'));
+    await fetchEndpoint('asic', 'https://whattomine.com/asic.json', selectedKeys.filter((key) => WTM_QUERY_CONFIG[key] && WTM_QUERY_CONFIG[key].endpoint === 'asic'));
   } catch (_) {
-    // Fetch failed; will fall back to demo data
-    fetchFailed = true;
+    // Any endpoint failure will fall back per algorithm below.
   }
 
-  // If fetch failed, use demo data for development/maintenance
-  if (!coinsData.length && fetchFailed) {
-    const algoKeys = enabled.map(a => String(a.key || '').toLowerCase());
-    for (const key of algoKeys) {
-      if (DEMO_COINS[key]) {
-        coinsData = coinsData.concat(DEMO_COINS[key]);
-      }
+  selectedKeys.forEach((key) => {
+    const matchedCoins = rawCoinsByKey.get(key) || [];
+    if (matchedCoins.length) {
+      coinsData = coinsData.concat(matchedCoins);
+      return;
     }
-  }
+    if (DEMO_COINS[key]) {
+      coinsData = coinsData.concat(DEMO_COINS[key]);
+    }
+  });
+
+  const seen = new Set();
+  coinsData = coinsData.filter((coin) => {
+    const id = `${String(coin.name || '').toLowerCase()}|${String(coin.algorithm || '').toLowerCase()}|${String(coin.tag || '').toLowerCase()}`;
+    if (seen.has(id)) return false;
+    seen.add(id);
+    return true;
+  }).sort((a, b) => (b.btcRevenue24 || b.btcRevenue || 0) - (a.btcRevenue24 || a.btcRevenue || 0));
 
   btcPrice = await fetchBitcoinUsdPrice();
 

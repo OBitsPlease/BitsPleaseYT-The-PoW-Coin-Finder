@@ -4,6 +4,13 @@ This is an Electron-based desktop app that displays newly listed and actively tr
 
 ## Release Notes
 
+### 1.0.7
+
+- Fixed Miner Calc to return algorithm-correct results (no cross-algo leakage like Scrypt showing non-Scrypt rows).
+- Restored unit dropdown selectors and hashrate conversion in Miner Calc inputs.
+- Restored deterministic profit math in Miner Calc (revenue minus full daily power cost).
+- Added full fallback coverage across supported algorithms when WhatToMine rate-limits requests.
+
 ### 1.0.5
 
 - Bumped app and installer version to 1.0.5.

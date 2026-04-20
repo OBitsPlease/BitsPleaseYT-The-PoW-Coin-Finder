@@ -752,7 +752,7 @@
 
     .mc-algo-row {
       display: grid;
-      grid-template-columns: 1fr 86px 50px;
+      grid-template-columns: 1fr 86px 68px;
       gap: 4px;
       align-items: center;
       margin-bottom: 5px;
@@ -793,6 +793,22 @@
       font-size: 10px;
       color: #6a8eaa;
       white-space: nowrap;
+    }
+
+    .mc-unit-select {
+      border: 1px solid var(--chip-border);
+      background: #1c1c1c;
+      color: #9ec2e4;
+      border-radius: 8px;
+      padding: 4px 6px;
+      font-size: 10px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .mc-unit-select:focus {
+      outline: none;
+      border-color: #3a6888;
     }
 
     .mc-divider {
@@ -1260,42 +1276,58 @@
           <div class="mc-algo-row">
             <div class="mc-algo-label">KawPow<small>RVN, FREN, NEOX…</small></div>
             <input id="mc-kawpow" type="number" step="0.01" min="0" placeholder="0">
-            <span class="mc-algo-unit">MH/s</span>
+            <select id="mc-kawpow-unit" class="mc-unit-select" title="KawPow hashrate unit">
+              <option value="h/s">H/s</option><option value="kh/s">kH/s</option><option value="mh/s" selected>MH/s</option><option value="gh/s">GH/s</option><option value="th/s">TH/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">Ethash<small>ETHW, Larissa…</small></div>
             <input id="mc-eth" type="number" step="0.01" min="0" placeholder="0">
-            <span class="mc-algo-unit">MH/s</span>
+            <select id="mc-eth-unit" class="mc-unit-select" title="Ethash hashrate unit">
+              <option value="h/s">H/s</option><option value="kh/s">kH/s</option><option value="mh/s" selected>MH/s</option><option value="gh/s">GH/s</option><option value="th/s">TH/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">Etchash<small>Ethereum Classic</small></div>
             <input id="mc-etc" type="number" step="0.01" min="0" placeholder="0">
-            <span class="mc-algo-unit">MH/s</span>
+            <select id="mc-etc-unit" class="mc-unit-select" title="Etchash hashrate unit">
+              <option value="h/s">H/s</option><option value="kh/s">kH/s</option><option value="mh/s" selected>MH/s</option><option value="gh/s">GH/s</option><option value="th/s">TH/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">Autolykos v2<small>Ergo</small></div>
             <input id="mc-erg" type="number" step="0.01" min="0" placeholder="0">
-            <span class="mc-algo-unit">MH/s</span>
+            <select id="mc-erg-unit" class="mc-unit-select" title="Autolykos hashrate unit">
+              <option value="h/s">H/s</option><option value="kh/s">kH/s</option><option value="mh/s" selected>MH/s</option><option value="gh/s">GH/s</option><option value="th/s">TH/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">FiroPow<small>Firo</small></div>
             <input id="mc-firo" type="number" step="0.01" min="0" placeholder="0">
-            <span class="mc-algo-unit">MH/s</span>
+            <select id="mc-firo-unit" class="mc-unit-select" title="FiroPow hashrate unit">
+              <option value="h/s">H/s</option><option value="kh/s">kH/s</option><option value="mh/s" selected>MH/s</option><option value="gh/s">GH/s</option><option value="th/s">TH/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">Octopus<small>Conflux</small></div>
             <input id="mc-cfx" type="number" step="0.01" min="0" placeholder="0">
-            <span class="mc-algo-unit">MH/s</span>
+            <select id="mc-cfx-unit" class="mc-unit-select" title="Octopus hashrate unit">
+              <option value="h/s">H/s</option><option value="kh/s">kH/s</option><option value="mh/s" selected>MH/s</option><option value="gh/s">GH/s</option><option value="th/s">TH/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">Equihash<small>ZEC, ARRR, KMD…</small></div>
             <input id="mc-zec" type="number" step="1" min="0" placeholder="0">
-            <span class="mc-algo-unit">Sol/s</span>
+            <select id="mc-zec-unit" class="mc-unit-select" title="Equihash hashrate unit">
+              <option value="sol/s" selected>Sol/s</option><option value="ksol/s">kSol/s</option><option value="msol/s">MSol/s</option><option value="gsol/s">GSol/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">Blake3<small>Alephium</small></div>
             <input id="mc-alph" type="number" step="0.01" min="0" placeholder="0">
-            <span class="mc-algo-unit">GH/s</span>
+            <select id="mc-alph-unit" class="mc-unit-select" title="Blake3 hashrate unit">
+              <option value="mh/s">MH/s</option><option value="gh/s" selected>GH/s</option><option value="th/s">TH/s</option><option value="ph/s">PH/s</option>
+            </select>
           </div>
 
           <hr class="mc-divider">
@@ -1304,12 +1336,16 @@
           <div class="mc-algo-row">
             <div class="mc-algo-label">RandomX<small>XMR, ZEPH, EPIC…</small></div>
             <input id="mc-xmr" type="number" step="1" min="0" placeholder="0">
-            <span class="mc-algo-unit">H/s</span>
+            <select id="mc-xmr-unit" class="mc-unit-select" title="RandomX hashrate unit">
+              <option value="h/s" selected>H/s</option><option value="kh/s">kH/s</option><option value="mh/s">MH/s</option><option value="gh/s">GH/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">GhostRider<small>Raptoreum</small></div>
             <input id="mc-rtm" type="number" step="1" min="0" placeholder="0">
-            <span class="mc-algo-unit">kH/s</span>
+            <select id="mc-rtm-unit" class="mc-unit-select" title="GhostRider hashrate unit">
+              <option value="h/s">H/s</option><option value="kh/s" selected>kH/s</option><option value="mh/s">MH/s</option><option value="gh/s">GH/s</option>
+            </select>
           </div>
 
           <hr class="mc-divider">
@@ -1318,12 +1354,16 @@
           <div class="mc-algo-row">
             <div class="mc-algo-label">SHA-256<small>BCH, BTC, XEC…</small></div>
             <input id="mc-sha256" type="number" step="0.001" min="0" placeholder="0">
-            <span class="mc-algo-unit">GH/s</span>
+            <select id="mc-sha256-unit" class="mc-unit-select" title="SHA-256 hashrate unit">
+              <option value="mh/s">MH/s</option><option value="gh/s" selected>GH/s</option><option value="th/s">TH/s</option><option value="ph/s">PH/s</option>
+            </select>
           </div>
           <div class="mc-algo-row">
             <div class="mc-algo-label">Scrypt<small>LTC, DOGE, PEP…</small></div>
             <input id="mc-ltc" type="number" step="0.01" min="0" placeholder="0">
-            <span class="mc-algo-unit">MH/s</span>
+            <select id="mc-ltc-unit" class="mc-unit-select" title="Scrypt hashrate unit">
+              <option value="mh/s">MH/s</option><option value="gh/s" selected>GH/s</option><option value="th/s">TH/s</option><option value="ph/s">PH/s</option>
+            </select>
           </div>
 
           <hr class="mc-divider">
@@ -2618,19 +2658,51 @@
     // Miner Calc
     // ----------------------------------------------------------------
     const MC_ALGO_INPUTS = [
-      { id: 'mc-kawpow',  key: 'kawpow', label: 'KawPow'      },
-      { id: 'mc-eth',     key: 'eth',    label: 'Ethash'      },
-      { id: 'mc-etc',     key: 'etc',    label: 'Etchash'     },
-      { id: 'mc-erg',     key: 'erg',    label: 'Autolykos'   },
-      { id: 'mc-firo',    key: 'firo',   label: 'FiroPow'     },
-      { id: 'mc-cfx',     key: 'cfx',    label: 'Octopus'     },
-      { id: 'mc-zec',     key: 'zec',    label: 'Equihash'    },
-      { id: 'mc-alph',    key: 'alph',   label: 'Blake3'      },
-      { id: 'mc-xmr',     key: 'xmr',   label: 'RandomX'     },
-      { id: 'mc-rtm',     key: 'rtm',    label: 'GhostRider'  },
-      { id: 'mc-sha256',  key: 'sha256', label: 'SHA-256'     },
-      { id: 'mc-ltc',     key: 'ltc',    label: 'Scrypt'      }
+      { id: 'mc-kawpow',  unitId: 'mc-kawpow-unit', key: 'kawpow',  label: 'KawPow',     family: 'hash', expectedUnit: 'mh/s' },
+      { id: 'mc-eth',     unitId: 'mc-eth-unit',    key: 'eth',     label: 'Ethash',     family: 'hash', expectedUnit: 'mh/s' },
+      { id: 'mc-etc',     unitId: 'mc-etc-unit',    key: 'etc',     label: 'Etchash',    family: 'hash', expectedUnit: 'mh/s' },
+      { id: 'mc-erg',     unitId: 'mc-erg-unit',    key: 'erg',     label: 'Autolykos',  family: 'hash', expectedUnit: 'mh/s' },
+      { id: 'mc-firo',    unitId: 'mc-firo-unit',   key: 'firo',    label: 'FiroPow',    family: 'hash', expectedUnit: 'mh/s' },
+      { id: 'mc-cfx',     unitId: 'mc-cfx-unit',    key: 'cfx',     label: 'Octopus',    family: 'hash', expectedUnit: 'mh/s' },
+      { id: 'mc-zec',     unitId: 'mc-zec-unit',    key: 'zec',     label: 'Equihash',   family: 'sol',  expectedUnit: 'sol/s' },
+      { id: 'mc-alph',    unitId: 'mc-alph-unit',   key: 'alph',    label: 'Blake3',     family: 'hash', expectedUnit: 'gh/s' },
+      { id: 'mc-xmr',     unitId: 'mc-xmr-unit',    key: 'xmr',     label: 'RandomX',    family: 'hash', expectedUnit: 'kh/s' },
+      { id: 'mc-rtm',     unitId: 'mc-rtm-unit',    key: 'rtm',     label: 'GhostRider', family: 'hash', expectedUnit: 'kh/s' },
+      { id: 'mc-sha256',  unitId: 'mc-sha256-unit', key: 'sha256',  label: 'SHA-256',    family: 'hash', expectedUnit: 'th/s' },
+      { id: 'mc-ltc',     unitId: 'mc-ltc-unit',    key: 'ltc',     label: 'Scrypt',     family: 'hash', expectedUnit: 'gh/s' }
     ];
+
+    const MC_UNIT_FACTORS = {
+      hash: {
+        'h/s': 1,
+        'kh/s': 1e3,
+        'mh/s': 1e6,
+        'gh/s': 1e9,
+        'th/s': 1e12,
+        'ph/s': 1e15
+      },
+      sol: {
+        'sol/s': 1,
+        'ksol/s': 1e3,
+        'msol/s': 1e6,
+        'gsol/s': 1e9
+      }
+    };
+
+    function normalizeUnit(unit) {
+      return String(unit || '').toLowerCase().replace(/\s+/g, '');
+    }
+
+    function convertMinerHashrate(value, fromUnit, toUnit, family) {
+      const unitFamily = MC_UNIT_FACTORS[family] || MC_UNIT_FACTORS.hash;
+      const from = normalizeUnit(fromUnit);
+      const to = normalizeUnit(toUnit);
+      const fromFactor = unitFamily[from];
+      const toFactor = unitFamily[to];
+      if (!Number.isFinite(value) || value <= 0) return 0;
+      if (!fromFactor || !toFactor) return value;
+      return (value * fromFactor) / toFactor;
+    }
 
     let mcCoinsData = [];
     let mcBtcPrice = 0;
@@ -2678,7 +2750,12 @@
     function mcFmtMoney(val) {
       const n = Number(val);
       if (!Number.isFinite(n)) return '$0.00';
-      return '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      const abs = Math.abs(n);
+      if (abs === 0) return '$0.00';
+      if (abs < 0.01) {
+        return '$' + abs.toLocaleString(undefined, { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+      }
+      return '$' + abs.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function mcFmtCoins(val) {
@@ -2719,17 +2796,17 @@
         let profitCls = 'mc-profit-zero';
         let profitSign = '';
         if (profit > 0.005) { profitCls = 'mc-profit-pos'; profitSign = '+'; }
-        else if (profit < -0.005) { profitCls = 'mc-profit-neg'; profitSign = ''; }
+        else if (profit < -0.005) { profitCls = 'mc-profit-neg'; profitSign = '-'; }
 
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="col-index">${idx + 1}</td>
           <td><span class="coin-name">${escapeHtml(coin.name)}</span><span class="mc-tag">${escapeHtml(coin.tag)}</span></td>
           <td><span class="mc-algo-badge">${escapeHtml(coin.algorithm)}</span></td>
-          <td class="metric">${mcFmtCoins(coin.estimatedRewards)}</td>
+          <td class="metric">${mcFmtCoins(coin.estimatedRewards24 || coin.estimatedRewards)}</td>
           <td class="metric">${mcFmtMoney(rev)}</td>
           <td class="metric">${cost > 0 ? mcFmtMoney(cost) : '<span class="muted">—</span>'}</td>
-          <td class="metric ${profitCls}">${profitSign}${mcFmtMoney(profit)}</td>
+          <td class="metric ${profitCls}">${profitSign}${mcFmtMoney(Math.abs(profit))}</td>
           <td class="metric">${mcFmtCoins(coin.blockReward)}</td>
           <td><span style="color:#8fb3d3;font-size:12px;">${escapeHtml(coin.status || 'Active')}</span></td>
         `;
@@ -2753,9 +2830,12 @@
     async function runMinerCalc() {
       if (!mcTbody || !mcStatus) return;
 
-      const algoInputs = MC_ALGO_INPUTS.map(({ id, key }) => {
+      const algoInputs = MC_ALGO_INPUTS.map(({ id, unitId, key, family, expectedUnit }) => {
         const el = document.getElementById(id);
-        const hrValue = el ? (parseFloat(el.value) || 0) : 0;
+        const unitEl = document.getElementById(unitId);
+        const rawValue = el ? (parseFloat(el.value) || 0) : 0;
+        const selectedUnit = unitEl ? unitEl.value : expectedUnit;
+        const hrValue = convertMinerHashrate(rawValue, selectedUnit, expectedUnit, family);
         const powerWatts = 0; // power handled client-side
         return { key, hrValue, powerWatts };
       }).filter(a => a.hrValue > 0);
@@ -2788,16 +2868,10 @@
             : '';
         }
 
-        // Distribute daily power cost proportionally across coins by BTC revenue.
-        const totalBtcRev = result.coins.reduce((s, c) => s + (c.btcRevenue24 || c.btcRevenue || 0), 0);
-
         mcCoinsData = result.coins.map(c => {
           const revenueBtc = c.btcRevenue24 || c.btcRevenue || 0;
           const revenue = revenueBtc * mcBtcPrice;
-          let powerCost = 0;
-          if (totalBtcRev > 0 && dailyPowerCostTotal > 0) {
-            powerCost = dailyPowerCostTotal * (revenueBtc / totalBtcRev);
-          }
+          const powerCost = dailyPowerCostTotal > 0 ? dailyPowerCostTotal : 0;
           const profit = revenue - powerCost;
           return { ...c, revenueBtc, revenue, powerCost, profit };
         });
