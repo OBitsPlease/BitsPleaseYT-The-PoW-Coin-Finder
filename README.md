@@ -64,6 +64,11 @@ Trigger it with either:
 - a version tag like v1.0.0
 - manual workflow dispatch in GitHub Actions
 
+Release behavior:
+- Pushes to `main` build and upload installer artifacts for CI verification.
+- Pushes to tags like `v1.0.6` build installers and publish a GitHub Release with attached artifacts.
+- Manual workflow runs can also publish a GitHub Release by enabling `publish_release` and supplying `release_tag`.
+
 ## Signing Secrets
 
 To produce signed installers in GitHub Actions, add these repository secrets:

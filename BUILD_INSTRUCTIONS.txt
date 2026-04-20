@@ -13,7 +13,13 @@
    npm run dist:mac
 
 5. GitHub Actions:
-   Push to main, create a tag such as v1.0.0, or run the workflow manually.
+   Push to main to verify builds, create a tag such as v1.0.0 to publish a release, or run the workflow manually.
+
+   Manual GitHub release path:
+   - Open the workflow in GitHub Actions.
+   - Click Run workflow.
+   - Enable publish_release.
+   - Set release_tag to a value like v1.0.7.
 
 Generated artifacts are written to the dist folder and uploaded by the workflow as GitHub Actions artifacts.
 
