@@ -634,6 +634,23 @@ async function fetchMiningPoolStatsPOWCoins(options = {}) {
   }
 }
 
+// Demo/fallback data for when WhatToMine is unavailable (development/maintenance mode)
+const DEMO_COINS = {
+  kawpow: [
+    { name: 'Ravencoin', tag: 'RVN', algorithm: 'KawPow', estimatedRewards: 1256, estimatedRewards24: 1256, btcRevenue: 0.00000012, btcRevenue24: 0.00000012, blockReward: 2500, blockTime: 60 },
+    { name: 'Neox', tag: 'NEOX', algorithm: 'KawPow', estimatedRewards: 485, estimatedRewards24: 485, btcRevenue: 0.00000008, btcRevenue24: 0.00000008, blockReward: 1024, blockTime: 64 }
+  ],
+  eth: [
+    { name: 'Ethash Coin', tag: 'ETH', algorithm: 'Ethash', estimatedRewards: 0.42, estimatedRewards24: 0.42, btcRevenue: 0.00000156, btcRevenue24: 0.00000156, blockReward: 2, blockTime: 12 }
+  ],
+  ltc: [
+    { name: 'Litecoin', tag: 'LTC', algorithm: 'Scrypt', estimatedRewards: 0.025, estimatedRewards24: 0.025, btcRevenue: 0.00000014, btcRevenue24: 0.00000014, blockReward: 6.25, blockTime: 600 }
+  ],
+  xmr: [
+    { name: 'Monero', tag: 'XMR', algorithm: 'RandomX', estimatedRewards: 0.0018, estimatedRewards24: 0.0018, btcRevenue: 0.00000004, btcRevenue24: 0.00000004, blockReward: 0.6, blockTime: 120 }
+  ]
+};
+
 async function fetchWhatToMineProfitability(algoInputs) {
   // algoInputs: [{ key: string, hrValue: number, powerWatts: number }]
   // hrValue must already be in the unit WhatToMine expects for that algo key.
@@ -652,6 +669,7 @@ async function fetchWhatToMineProfitability(algoInputs) {
 
   let coinsData = [];
   let btcPrice = 0;
+  let fetchFailed = false;
 
   try {
     const text = await fetchTextWithTimeout(url, 15000);
@@ -678,7 +696,18 @@ async function fetchWhatToMineProfitability(algoInputs) {
         .sort((a, b) => b.btcRevenue - a.btcRevenue);
     }
   } catch (_) {
-    // Return empty on network or parse failure.
+    // Fetch failed; will fall back to demo data
+    fetchFailed = true;
+  }
+
+  // If fetch failed, use demo data for development/maintenance
+  if (!coinsData.length && fetchFailed) {
+    const algoKeys = enabled.map(a => String(a.key || '').toLowerCase());
+    for (const key of algoKeys) {
+      if (DEMO_COINS[key]) {
+        coinsData = coinsData.concat(DEMO_COINS[key]);
+      }
+    }
   }
 
   btcPrice = await fetchBitcoinUsdPrice();

@@ -6,7 +6,11 @@
 - [x] Scaffold the Project
 	Electron project structure and mockup page are in place.
 
-- [ ] Customize the Project
+- [x] Customize the Project
+	Miner Calc with unit conversion, algorithm routing to WhatToMine endpoints, profit calculations, and error reporting.
+	New Listings page with algorithm detection and confidence badges.
+	PoW Prices tab with sorting and search functionality.
+	All pages with responsive UI and clickable links.
 
 - [x] Install Required Extensions
 	No additional extensions required for this Electron app.
@@ -14,8 +18,14 @@
 - [x] Compile the Project
 	Dependencies installed and app launches with npm start.
 
-- [ ] Create and Run Task
+- [x] Create and Run Task
+	Build and start tasks configured in package.json; app launches with npm start.
 
-- [ ] Launch the Project
+- [x] Launch the Project
+	App successfully launches with Electron; responsive UI functional and all pages accessible.
 
-- [ ] Ensure Documentation is Complete
+- [x] Ensure Documentation is Complete
+	README.md documents all features, build instructions, and release workflow.
+	BUILD_INSTRUCTIONS.txt provides step-by-step local and CI build guidance.
+	RELEASE_CHECKLIST.md contains versioning and release procedures.
+	Package.json scripts configured for dev, build, and release workflows.
