@@ -29,6 +29,10 @@ Use [RELEASE_CHECKLIST.md](RELEASE_CHECKLIST.md) for the step-by-step 1.0.x rele
    npm install
    npm start
 
+## Windows Data Location
+
+On Windows, app runtime data is stored in `%LOCALAPPDATA%\\BitsPleaseYT The PoW Coin Finder` (not OneDrive-backed folders).
+
 ## Features
 - Modern web-style GUI
 - List of POW coins with clickable links (website, GitHub, explorer)

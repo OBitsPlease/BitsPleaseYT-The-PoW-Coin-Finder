@@ -52,23 +52,13 @@
       gap: 10px;
       flex-wrap: wrap;
       padding: 12px 14px;
-      border-bottom: 1px solid var(--line);
       background: rgba(20, 20, 20, 0.95);
-    }
-
-    .creator-header {
-      padding: 7px 14px;
-      font-size: 11px;
-      color: #86a2be;
-      letter-spacing: 0.03em;
-      border-bottom: 1px solid var(--line);
-      background: rgba(24, 24, 24, 0.92);
     }
 
     .chip {
       border: 1px solid var(--chip-border);
-      background: var(--chip);
-      color: var(--text);
+      background: #202020;
+      color: #eef7ff;
       border-radius: 999px;
       padding: 7px 12px;
       font-size: 13px;
@@ -78,12 +68,13 @@
     .chip-btn {
       text-decoration: none;
       cursor: pointer;
+      color: inherit;
       transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
     }
 
     .chip-btn:hover {
-      border-color: #5a5a5a;
-      background: #2b2b2b;
+      border-color: #6a6a6a;
+      background: #2c2c2c;
       color: #ecf8ff;
     }
 
@@ -168,7 +159,7 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 1320px;
+      min-width: 1240px;
     }
 
     thead th {
@@ -232,7 +223,17 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      min-width: 280px;
+      min-width: 220px;
+      max-width: 280px;
+    }
+
+    .pow-col-coin {
+      width: 260px;
+      max-width: 260px;
+    }
+
+    .pow-col-compact {
+      white-space: nowrap;
     }
 
     .coin-badge {
@@ -274,6 +275,10 @@
     .coin-name {
       color: var(--text);
       font-weight: 700;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .coin-name.yellow {
@@ -355,39 +360,124 @@
     }
 
     .source-link a {
-      color: #77c7ff;
-      text-decoration: none;
-      border-bottom: 1px dotted rgba(119, 199, 255, 0.5);
-    }
-
-    .source-link a:hover {
-      color: #a8e1ff;
-      border-color: rgba(168, 225, 255, 0.95);
-    }
-
-    .links {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-      min-width: 220px;
-    }
-
-    .links a {
       text-decoration: none;
       color: #daf2ff;
       border: 1px solid var(--btn-border);
       background: var(--btn-bg);
       border-radius: 999px;
+      min-width: 108px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
       padding: 4px 10px;
       font-size: 12px;
       font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
       transition: background 0.2s ease, border 0.2s ease;
     }
 
-    .links a:hover {
+    .source-link a:hover {
       background: var(--btn-hover);
       border-color: #3a84be;
+    }
+
+    .links {
+      position: relative;
+      width: var(--pow-link-btn-width, 92px);
+      min-width: var(--pow-link-btn-width, 92px);
+      height: 28px;
+      overflow: visible;
+      isolation: isolate;
+    }
+
+    .links::before {
+      content: "";
+      position: absolute;
+      right: 100%;
+      top: 50%;
+      width: 14px;
+      height: 44px;
+      transform: translateY(-50%);
+    }
+
+    .links-toggle,
+    .links-panel a {
+      text-decoration: none;
+      color: #daf2ff;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      border-radius: 999px;
+      min-width: var(--pow-link-btn-width, 92px);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      white-space: nowrap;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+      transition: background 0.2s ease, border 0.2s ease, transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+
+    .links-toggle {
+      position: absolute;
+      right: 0;
+      top: 0;
+      cursor: default;
+      z-index: 2;
+    }
+
+    .links-panel {
+      position: absolute;
+      right: calc(100% - 2px);
+      top: 50%;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      max-width: min(560px, 52vw);
+      padding: 6px 8px;
+      border: 1px solid rgba(58, 132, 190, 0.35);
+      border-radius: 16px;
+      background: rgba(18, 20, 24, 0.96);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.34);
+      transform: translateY(-50%) translateX(4px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      overflow-x: auto;
+      scrollbar-width: thin;
+    }
+
+    .links-panel a {
+      flex: 0 0 auto;
+    }
+
+    .links-panel a:hover,
+    .links-panel a:focus-visible {
+      background: var(--btn-hover);
+      border-color: #3a84be;
+    }
+
+    .links:hover,
+    .links:focus-within {
+      z-index: 25;
+    }
+
+    .links:hover .links-toggle,
+    .links:focus-within .links-toggle {
+      background: #2b2f35;
+      border-color: #3a84be;
+    }
+
+    .links:hover .links-panel,
+    .links:focus-within .links-panel {
+      transform: translateY(-50%) translateX(0);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
 
     .empty-links {
@@ -505,21 +595,420 @@
       max-width: 40vw;
     }
 
-    @media (max-width: 768px) {
-      body {
-        padding: 8px;
-      }
-
-      .topbar {
-        gap: 8px;
-      }
-
-      .chip {
-        font-size: 12px;
-        padding: 6px 10px;
-      }
-
+    .power-cost-wrap {
+      padding: 14px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 14px;
     }
+
+    .power-card {
+      border: 1px solid var(--line);
+      background: rgba(20, 20, 20, 0.9);
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .power-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 14px;
+      color: #cfe9ff;
+      letter-spacing: 0.01em;
+    }
+
+    .power-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .power-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .power-field label {
+      font-size: 12px;
+      color: #9ec2e4;
+    }
+
+    .power-field input,
+    .power-field select {
+      border: 1px solid var(--chip-border);
+      background: #202020;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 13px;
+      width: 100%;
+    }
+
+    .power-actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .power-btn {
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: #e8f7ff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .power-btn:hover {
+      background: var(--btn-hover);
+      border-color: #4f7ca1;
+    }
+
+    .power-btn.primary {
+      background: #143329;
+      border-color: #246948;
+      color: #b8ffd9;
+    }
+
+    .power-btn.primary:hover {
+      background: #194030;
+      border-color: #2f8a5f;
+    }
+
+    .power-results {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .power-stat {
+      border: 1px solid #2f2f2f;
+      background: #181818;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .power-stat .label {
+      color: #8fb3d3;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .power-stat .value {
+      color: #dff3ff;
+      font-size: 22px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.15;
+    }
+
+    .power-stat .sub {
+      color: #7f9ab5;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .power-formula {
+      margin-top: 10px;
+      color: #88a6c1;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .power-error {
+      color: #ffc44f;
+      font-size: 12px;
+      margin-top: 8px;
+      min-height: 18px;
+    }
+
+    /* ---- Miner Calc ---- */
+    .mc-wrap {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      gap: 0;
+      min-height: 420px;
+    }
+
+    .mc-sidebar {
+      border-right: 1px solid var(--line);
+      padding: 12px;
+      background: rgba(18, 18, 18, 0.95);
+      overflow-y: auto;
+    }
+
+    .mc-sidebar h3 {
+      margin: 0 0 8px 0;
+      font-size: 12px;
+      font-weight: 700;
+      color: #8fb3d3;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .mc-algo-row {
+      display: grid;
+      grid-template-columns: 1fr 86px 50px;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .mc-algo-label {
+      font-size: 12px;
+      color: #b2cce3;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mc-algo-label small {
+      display: block;
+      font-size: 10px;
+      color: #6a8eaa;
+      margin-top: 1px;
+    }
+
+    .mc-algo-row input {
+      border: 1px solid var(--chip-border);
+      background: #1c1c1c;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 5px 7px;
+      font-size: 12px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .mc-algo-row input:focus {
+      outline: none;
+      border-color: #3a6888;
+    }
+
+    .mc-algo-unit {
+      font-size: 10px;
+      color: #6a8eaa;
+      white-space: nowrap;
+    }
+
+    .mc-divider {
+      border: none;
+      border-top: 1px solid var(--line);
+      margin: 10px 0;
+    }
+
+    .mc-cost-row {
+      display: grid;
+      grid-template-columns: 1fr 86px 50px;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+
+    .mc-cost-label {
+      font-size: 12px;
+      color: #b2cce3;
+    }
+
+    .mc-actions {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+    }
+
+    .mc-btn {
+      flex: 1;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color: #e8f7ff;
+      border-radius: 999px;
+      padding: 7px 8px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .mc-btn:hover { background: var(--btn-hover); border-color: #4f7ca1; }
+
+    .mc-btn.primary {
+      background: #112d20;
+      border-color: #1e6040;
+      color: #9dffc9;
+    }
+
+    .mc-btn.primary:hover { background: #1a3f2c; border-color: #28855a; }
+
+    .mc-status {
+      font-size: 11px;
+      color: #7f9ab5;
+      margin-top: 8px;
+      min-height: 16px;
+    }
+
+    .mc-main { overflow-x: auto; }
+
+    .mc-results-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(20, 20, 20, 0.9);
+      font-size: 12px;
+      color: #8fb3d3;
+      flex-wrap: wrap;
+    }
+
+    .mc-btc-price { color: #f7c94a; font-weight: 700; }
+
+    .mc-algo-filter {
+      border: 1px solid var(--chip-border);
+      background: #1c1c1c;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 4px 8px;
+      font-size: 12px;
+      margin-left: auto;
+    }
+
+    .mc-table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 700px;
+      font-size: 13px;
+    }
+
+    .mc-table thead th {
+      text-align: left;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 700;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .mc-table thead th.mc-sortable { cursor: pointer; user-select: none; transition: color 0.15s; }
+    .mc-table thead th.mc-sortable:hover { color: #c7e8ff; }
+    .mc-table thead th.mc-sorted-asc::after  { content: " ▲"; font-size: 9px; color: #8ecbff; }
+    .mc-table thead th.mc-sorted-desc::after { content: " ▼"; font-size: 9px; color: #8ecbff; }
+
+    .mc-table tbody tr { border-bottom: 1px solid rgba(45,45,45,0.85); }
+    .mc-table tbody tr:hover { background: rgba(40,40,40,0.7); }
+    .mc-table td { padding: 8px 10px; vertical-align: middle; white-space: nowrap; }
+
+    .mc-profit-pos  { color: #3ee898; font-weight: 700; }
+    .mc-profit-neg  { color: #ff7070; font-weight: 700; }
+    .mc-profit-zero { color: #8fb3d3; }
+
+    .pct-up   { color: #3ee898; font-weight: 600; }
+    .pct-down { color: #ff7070; font-weight: 600; }
+    .pct-flat { color: #8fb3d3; }
+    .pct-legend { display: flex; align-items: center; gap: 18px; padding: 5px 4px 8px; font-size: 0.78rem; color: #8fb3d3; flex-wrap: wrap; }
+    .pct-legend-item { display: flex; align-items: center; gap: 5px; }
+    .pct-dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    .pct-dot.up   { background: #3ee898; }
+    .pct-dot.down { background: #ff7070; }
+    .pct-dot.flat { background: #8fb3d3; }
+
+    .mc-tag {
+      display: inline-block;
+      border: 1px solid #2f4d65;
+      background: #122030;
+      color: #7ec9f7;
+      border-radius: 4px;
+      padding: 1px 5px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      margin-left: 5px;
+      vertical-align: middle;
+    }
+
+    .mc-algo-badge {
+      display: inline-block;
+      border: 1px solid #303030;
+      background: #1e1e1e;
+      color: #9ec2e4;
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+    }
+
+    .mc-empty {
+      padding: 32px 14px;
+      color: #6f8aa4;
+      font-size: 14px;
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .mc-wrap { grid-template-columns: 1fr; }
+      .mc-sidebar { border-right: none; border-bottom: 1px solid var(--line); }
+      body { padding: 8px; }
+      .topbar { gap: 8px; }
+      .chip { font-size: 12px; padding: 6px 10px; }
+      .power-cost-wrap { grid-template-columns: 1fr; }
+      .power-grid { grid-template-columns: 1fr; }
+      .cal-columns { grid-template-columns: 1fr; }
+    }
+
+    /* ---- Upcoming Events Calendar ---- */
+    .cal-view-wrap { padding: 10px 14px 20px; }
+    .cal-topbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+    .cal-search { background: var(--bg-1); border: 1px solid var(--line); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 13px; width: 220px; }
+    .cal-search:focus { outline: none; border-color: var(--accent); }
+    .cal-status { font-size: 12px; color: #8fb3d3; }
+    .cal-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+    .cal-col-title { font-size: 11px; font-weight: 700; color: #8fb3d3; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+    .cal-list { display: flex; flex-direction: column; gap: 8px; }
+    .cal-card {
+      background: var(--bg-1);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 0 10px;
+      align-items: start;
+    }
+    .cal-card:hover { border-color: #3a4a5a; }
+    .cal-countdown {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 52px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 6px;
+      padding: 4px 2px;
+      grid-row: span 2;
+    }
+    .cal-days { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1; }
+    .cal-days-label { font-size: 10px; color: #6f8aa4; text-transform: uppercase; letter-spacing: 0.06em; }
+    .cal-date { font-size: 10px; color: #6f8aa4; margin-top: 3px; }
+    .cal-card-header { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .cal-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: contain; flex-shrink: 0; background: rgba(255,255,255,0.05); }
+    .cal-icon-dot { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #000; flex-shrink: 0; }
+    .cal-coin-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cal-coin-name a { color: inherit; text-decoration: none; }
+    .cal-coin-name a:hover { color: var(--accent); }
+    .cal-symbol { font-size: 11px; color: #6f8aa4; margin-left: 4px; }
+    .cal-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.04em; margin-left: auto; flex-shrink: 0; }
+    .cal-badge-halving { background: #2a4a1a; color: #6fe87a; }
+    .cal-badge-fork { background: #1a2f4a; color: #5ab4ff; }
+    .cal-badge-algo { background: #3a2a1a; color: #ffb347; }
+    .cal-badge-other { background: #2a2a2a; color: #8fb3d3; }
+    .cal-card-body { margin-top: 4px; padding-top: 2px; }
+    .cal-block { font-size: 11px; color: #6f8aa4; margin-bottom: 2px; }
+    .cal-desc { font-size: 12px; color: #9ec2e4; line-height: 1.4; }
+    .cal-empty { padding: 32px; text-align: center; color: #6f8aa4; font-size: 14px; }
   </style>
 </head>
 <body>
@@ -539,6 +1028,9 @@
       <button class="chip chip-btn" id="nav-pow" type="button">Proof of Work (PoW)</button>
       <button class="chip chip-btn active" id="nav-new" type="button">New Listings</button>
       <button class="chip chip-btn" id="nav-detailed" type="button">PoW Prices</button>
+      <button class="chip chip-btn" id="nav-power" type="button">Power Costs</button>
+      <button class="chip chip-btn" id="nav-minercalc" type="button">Miner Calc</button>
+      <button class="chip chip-btn" id="nav-events" type="button">Upcoming Events</button>
       <a class="chip chip-btn" href="https://www.coingecko.com/en/categories/proof-of-work-pow" target="_blank" rel="noopener noreferrer">CoinGecko</a>
       <a class="chip chip-btn" href="https://bitcointalk.org/index.php?board=159.0" target="_blank" rel="noopener noreferrer">Bitcointalk</a>
       <a class="chip chip-btn" href="https://miningpoolstats.stream/" target="_blank" rel="noopener noreferrer">Open MiningPoolStats</a>
@@ -587,27 +1079,63 @@
 
     <div class="view" id="view-pow-directory">
       <p class="view-title">PoW Coins from MiningPoolStats (top by market cap) with links from each coin page</p>
+      <div class="pct-legend">
+        <span class="pct-legend-item"><span class="pct-dot up"></span>Price Up</span>
+        <span class="pct-legend-item"><span class="pct-dot down"></span>Price Down</span>
+        <span class="pct-legend-item"><span class="pct-dot flat"></span>Flat / No data</span>
+        <span class="pct-legend-item" style="margin-left:10px;color:#6a8aaa;font-size:0.72rem;">1h &amp; 24h from CoinGecko &nbsp;|&nbsp; 7d from MiningPoolStats</span>
+      </div>
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
               <th>#</th>
-              <th class="sortable" data-pow-sort="name">Coin</th>
+              <th class="sortable pow-col-coin" data-pow-sort="name">Coin</th>
               <th class="sortable" data-pow-sort="symbol">Symbol</th>
               <th class="sortable" data-pow-sort="algo">Algorithm</th>
               <th class="sortable" data-pow-sort="price">Price</th>
-              <th class="sortable" data-pow-sort="change7d">7d</th>
+              <th class="sortable pow-col-compact" data-pow-sort="change1h">1h Price</th>
+              <th class="sortable pow-col-compact" data-pow-sort="change24h">24h Price</th>
+              <th class="sortable pow-col-compact" data-pow-sort="change7d">7d Price</th>
+              <th class="sortable" data-pow-sort="volume24h">24h Volume</th>
               <th class="sortable" data-pow-sort="marketCap">Market Cap</th>
+              <th class="sortable" data-pow-sort="networkHashrate">Net Hashrate</th>
+              <th class="sortable" data-pow-sort="poolHashrate">Pools Hashrate</th>
+              <th class="sortable pow-col-compact" data-pow-sort="diff7dChange">7d Diff</th>
+              <th class="sortable" data-pow-sort="emissions24h">24h Emissions</th>
               <th class="sortable" data-pow-sort="pageUrl">Coin Page</th>
               <th>Links</th>
             </tr>
           </thead>
           <tbody id="pow-list">
             <tr>
-              <td colspan="9" class="status">Click Proof of Work (PoW) to load this list.</td>
+              <td colspan="16" class="status">Click Proof of Work (PoW) to load this list.</td>
             </tr>
           </tbody>
         </table>
+      </div>
+    </div>
+
+    <div class="view" id="view-events">
+      <div class="cal-view-wrap">
+        <div class="cal-topbar">
+          <input class="cal-search" id="cal-search" type="text" placeholder="Search coin name or symbol…">
+          <span class="cal-status" id="cal-status"></span>
+        </div>
+        <div class="cal-columns">
+          <div>
+            <div class="cal-col-title">Upcoming Events</div>
+            <div class="cal-list" id="cal-upcoming-list">
+              <div class="cal-empty">Click "Upcoming Events" to load.</div>
+            </div>
+          </div>
+          <div>
+            <div class="cal-col-title">Past Events</div>
+            <div class="cal-list" id="cal-past-list">
+              <div class="cal-empty">Click "Upcoming Events" to load.</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -641,6 +1169,215 @@
       </div>
     </div>
 
+    <div class="view" id="view-power-costs">
+      <p class="view-title">Power Costs Calculator for Mining Rigs</p>
+      <div class="power-cost-wrap">
+        <div class="power-card">
+          <h3>Inputs</h3>
+          <div class="power-grid">
+            <div class="power-field">
+              <label for="pc-power">Miner power draw</label>
+              <input id="pc-power" type="number" step="0.01" min="0" value="2000">
+            </div>
+            <div class="power-field">
+              <label for="pc-power-unit">Power unit</label>
+              <select id="pc-power-unit">
+                <option value="w" selected>Watts (W)</option>
+                <option value="kw">Kilowatts (kW)</option>
+              </select>
+            </div>
+            <div class="power-field">
+              <label for="pc-miners">Number of miners</label>
+              <input id="pc-miners" type="number" step="1" min="1" value="1">
+            </div>
+            <div class="power-field">
+              <label for="pc-efficiency">PSU efficiency (%)</label>
+              <input id="pc-efficiency" type="number" step="0.1" min="1" max="100" value="90">
+            </div>
+            <div class="power-field">
+              <label for="pc-hours">Usage (hours/day)</label>
+              <input id="pc-hours" type="number" step="0.1" min="0" max="24" value="24">
+            </div>
+            <div class="power-field">
+              <label for="pc-price">Electricity price ($/kWh)</label>
+              <input id="pc-price" type="number" step="0.0001" min="0" value="0.15">
+            </div>
+            <div class="power-field">
+              <label for="pc-days">Billing cycle (days)</label>
+              <input id="pc-days" type="number" step="1" min="1" value="30">
+            </div>
+            <div class="power-field">
+              <label for="pc-revenue">Optional revenue/day ($)</label>
+              <input id="pc-revenue" type="number" step="0.01" min="0" value="0">
+            </div>
+          </div>
+          <div class="power-actions">
+            <button class="power-btn primary" id="pc-calc" type="button">Calculate</button>
+            <button class="power-btn" id="pc-reset" type="button">Reset</button>
+          </div>
+          <div class="power-formula">
+            kWh/day = ((Power per miner x miner count) / PSU efficiency) x usage hours / 1000<br>
+            Cost = Energy (kWh) x electricity price
+          </div>
+          <div class="power-error" id="pc-error" aria-live="polite"></div>
+        </div>
+
+        <div class="power-card">
+          <h3>Estimated Costs</h3>
+          <div class="power-results">
+            <div class="power-stat">
+              <div class="label">Effective wall draw</div>
+              <div class="value" id="pc-effective-draw">0.00 kW</div>
+              <div class="sub" id="pc-daily-energy">0.00 kWh/day</div>
+            </div>
+            <div class="power-stat">
+              <div class="label">Daily cost</div>
+              <div class="value" id="pc-daily-cost">$0.00</div>
+              <div class="sub" id="pc-daily-net">Net/day: $0.00</div>
+            </div>
+            <div class="power-stat">
+              <div class="label">Cycle cost</div>
+              <div class="value" id="pc-cycle-cost">$0.00</div>
+              <div class="sub" id="pc-cycle-energy">0.00 kWh per cycle</div>
+            </div>
+            <div class="power-stat">
+              <div class="label">Yearly cost</div>
+              <div class="value" id="pc-yearly-cost">$0.00</div>
+              <div class="sub" id="pc-yearly-net">Net/year: $0.00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="view" id="view-miner-calc">
+      <p class="view-title">Miner Profitability Calculator &mdash; data via WhatToMine &middot; enter your hashrate per algorithm to see estimated earnings</p>
+      <div class="mc-wrap">
+        <!-- Left: algorithm + cost inputs -->
+        <div class="mc-sidebar">
+          <h3>GPU Algorithms</h3>
+
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">KawPow<small>RVN, FREN, NEOX…</small></div>
+            <input id="mc-kawpow" type="number" step="0.01" min="0" placeholder="0">
+            <span class="mc-algo-unit">MH/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">Ethash<small>ETHW, Larissa…</small></div>
+            <input id="mc-eth" type="number" step="0.01" min="0" placeholder="0">
+            <span class="mc-algo-unit">MH/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">Etchash<small>Ethereum Classic</small></div>
+            <input id="mc-etc" type="number" step="0.01" min="0" placeholder="0">
+            <span class="mc-algo-unit">MH/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">Autolykos v2<small>Ergo</small></div>
+            <input id="mc-erg" type="number" step="0.01" min="0" placeholder="0">
+            <span class="mc-algo-unit">MH/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">FiroPow<small>Firo</small></div>
+            <input id="mc-firo" type="number" step="0.01" min="0" placeholder="0">
+            <span class="mc-algo-unit">MH/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">Octopus<small>Conflux</small></div>
+            <input id="mc-cfx" type="number" step="0.01" min="0" placeholder="0">
+            <span class="mc-algo-unit">MH/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">Equihash<small>ZEC, ARRR, KMD…</small></div>
+            <input id="mc-zec" type="number" step="1" min="0" placeholder="0">
+            <span class="mc-algo-unit">Sol/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">Blake3<small>Alephium</small></div>
+            <input id="mc-alph" type="number" step="0.01" min="0" placeholder="0">
+            <span class="mc-algo-unit">GH/s</span>
+          </div>
+
+          <hr class="mc-divider">
+          <h3>CPU Algorithms</h3>
+
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">RandomX<small>XMR, ZEPH, EPIC…</small></div>
+            <input id="mc-xmr" type="number" step="1" min="0" placeholder="0">
+            <span class="mc-algo-unit">H/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">GhostRider<small>Raptoreum</small></div>
+            <input id="mc-rtm" type="number" step="1" min="0" placeholder="0">
+            <span class="mc-algo-unit">kH/s</span>
+          </div>
+
+          <hr class="mc-divider">
+          <h3>ASIC Algorithms</h3>
+
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">SHA-256<small>BCH, BTC, XEC…</small></div>
+            <input id="mc-sha256" type="number" step="0.001" min="0" placeholder="0">
+            <span class="mc-algo-unit">GH/s</span>
+          </div>
+          <div class="mc-algo-row">
+            <div class="mc-algo-label">Scrypt<small>LTC, DOGE, PEP…</small></div>
+            <input id="mc-ltc" type="number" step="0.01" min="0" placeholder="0">
+            <span class="mc-algo-unit">MH/s</span>
+          </div>
+
+          <hr class="mc-divider">
+          <h3>Electricity</h3>
+
+          <div class="mc-cost-row">
+            <span class="mc-cost-label">Cost ($/kWh)</span>
+            <input id="mc-power-price" type="number" step="0.0001" min="0" value="0.15">
+            <span class="mc-algo-unit">$/kWh</span>
+          </div>
+          <div class="mc-cost-row">
+            <span class="mc-cost-label">Total draw (W)</span>
+            <input id="mc-total-watts" type="number" step="1" min="0" value="0">
+            <span class="mc-algo-unit">Watts</span>
+          </div>
+
+          <div class="mc-actions">
+            <button class="mc-btn primary" id="mc-calc-btn" type="button">Calculate</button>
+            <button class="mc-btn" id="mc-clear-btn" type="button">Clear</button>
+          </div>
+          <div class="mc-status" id="mc-status" aria-live="polite"></div>
+        </div>
+
+        <!-- Right: results table -->
+        <div class="mc-main">
+          <div class="mc-results-header">
+            <span>Profitability ranked by daily revenue</span>
+            <span id="mc-btc-price-display" class="mc-btc-price"></span>
+            <select id="mc-algo-filter" class="mc-algo-filter" title="Filter by algorithm">
+              <option value="">All algorithms</option>
+            </select>
+          </div>
+          <table class="mc-table" id="mc-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th class="mc-sortable" data-mc-sort="name">Coin</th>
+                <th class="mc-sortable" data-mc-sort="algorithm">Algorithm</th>
+                <th class="mc-sortable" data-mc-sort="estimatedRewards">Est. Coins/day</th>
+                <th class="mc-sortable" data-mc-sort="revenue">Revenue/day</th>
+                <th class="mc-sortable" data-mc-sort="powerCost">Power Cost/day</th>
+                <th class="mc-sortable" data-mc-sort="profit">Profit/day</th>
+                <th>Block Reward</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="mc-tbody">
+              <tr><td colspan="9" class="mc-empty">Enter hashrates above and click Calculate to see profitability estimates.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="footer" id="footer">Electron/Web GUI</div>
   </div>
   <script>
@@ -661,9 +1398,15 @@
     const navPow = document.getElementById('nav-pow');
     const navNew = document.getElementById('nav-new');
     const navDetailed = document.getElementById('nav-detailed');
+    const navPower = document.getElementById('nav-power');
+    const navMinerCalc = document.getElementById('nav-minercalc');
+    const navEvents = document.getElementById('nav-events');
     const newView = document.getElementById('view-new-listings');
     const powView = document.getElementById('view-pow-directory');
     const detailedView = document.getElementById('view-detailed-coins');
+    const powerView = document.getElementById('view-power-costs');
+    const minerCalcView = document.getElementById('view-miner-calc');
+    const eventsView = document.getElementById('view-events');
     const powSortHeaders = Array.from(document.querySelectorAll('th[data-pow-sort]'));
     const powSearchWrap = document.getElementById('pow-search-wrap');
     const powSearchInput = document.getElementById('pow-search');
@@ -697,6 +1440,20 @@
       ensureDetailedCoinsLoaded();
     });
 
+    navPower.addEventListener('click', () => {
+      switchView('power');
+      calculatePowerCosts();
+    });
+
+    navMinerCalc.addEventListener('click', () => {
+      switchView('minercalc');
+    });
+
+    navEvents.addEventListener('click', () => {
+      switchView('events');
+      ensureCalendarLoaded();
+    });
+
     powSortHeaders.forEach((header) => {
       header.addEventListener('click', () => {
         const key = header.dataset.powSort;
@@ -705,7 +1462,8 @@
           powSortDirection = powSortDirection === 'asc' ? 'desc' : 'asc';
         } else {
           powSortKey = key;
-          powSortDirection = key === 'marketCap' || key === 'price' ? 'desc' : 'asc';
+          const descByDefault = ['marketCap', 'price', 'volume24h', 'networkHashrate', 'poolHashrate', 'emissions24h'];
+          powSortDirection = descByDefault.includes(key) ? 'desc' : 'asc';
         }
         renderPowDirectoryRows();
         updatePowSortIndicators();
@@ -746,14 +1504,23 @@
       const isNew = viewName === 'new';
       const isPow = viewName === 'pow';
       const isDetailed = viewName === 'detailed';
+      const isPower = viewName === 'power';
+      const isMinerCalc = viewName === 'minercalc';
+      const isEvents = viewName === 'events';
 
       newView.classList.toggle('active', isNew);
       powView.classList.toggle('active', isPow);
       detailedView.classList.toggle('active', isDetailed);
+      powerView.classList.toggle('active', isPower);
+      if (minerCalcView) minerCalcView.classList.toggle('active', isMinerCalc);
+      if (eventsView) eventsView.classList.toggle('active', isEvents);
 
       navNew.classList.toggle('active', isNew);
       navPow.classList.toggle('active', isPow);
       navDetailed.classList.toggle('active', isDetailed);
+      navPower.classList.toggle('active', isPower);
+      if (navMinerCalc) navMinerCalc.classList.toggle('active', isMinerCalc);
+      if (navEvents) navEvents.classList.toggle('active', isEvents);
 
       if (sortLabel) sortLabel.style.display = isNew ? 'inline' : 'none';
       if (sortSelect) sortSelect.style.display = isNew ? 'inline-block' : 'none';
@@ -862,9 +1629,26 @@
     }
 
     function makeLinkButton(url, label) {
-      if (!url) return '';
-      const safeHref = escapeHtml(url);
-      return `<a href="${safeHref}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+      if (!url) return null;
+      return {
+        url,
+        label
+      };
+    }
+
+    function renderLinkFlyout(linkItems, emptyText = 'No links found', triggerPrefix = 'Links') {
+      const links = Array.isArray(linkItems) ? linkItems.filter(link => link && link.url) : [];
+      if (!links.length) return `<span class="empty-links">${escapeHtml(emptyText)}</span>`;
+
+      const linkButtons = links.slice(0, 10).map((link) => {
+        const label = escapeHtml(link.label || link.text || 'Link');
+        const url = escapeHtml(link.url || '');
+        if (!url) return '';
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
+      }).filter(Boolean).join('');
+
+      if (!linkButtons) return `<span class="empty-links">${escapeHtml(emptyText)}</span>`;
+      return `<div class="links"><span class="links-toggle">${escapeHtml(triggerPrefix)} (${Math.min(links.length, 10)})</span><div class="links-panel">${linkButtons}</div></div>`;
     }
 
     function buildCoinQuery(rawName) {
@@ -952,11 +1736,53 @@
       return `${value.toFixed(2)}%`;
     }
 
+    function formatPercentColored(value) {
+      if (typeof value !== 'number' || Number.isNaN(value)) return '<span class="muted">n/a</span>';
+      const sign = value > 0 ? '+' : '';
+      if (value > 0.005) return `<span class="pct-up">${sign}${value.toFixed(2)}%</span>`;
+      if (value < -0.005) return `<span class="pct-down">${value.toFixed(2)}%</span>`;
+      return `<span class="pct-flat">${value.toFixed(2)}%</span>`;
+    }
+
     function formatCap(value) {
       if (typeof value !== 'number' || Number.isNaN(value)) return '<span class="muted">n/a</span>';
       return '$' + value.toLocaleString(undefined, {
         maximumFractionDigits: 0
       });
+    }
+
+    function formatHashrate(hashes) {
+      const n = Number(hashes);
+      if (!Number.isFinite(n) || n <= 0) return '<span class="muted">n/a</span>';
+      const tiers = [
+        [1e24, 'YH/s'], [1e21, 'ZH/s'], [1e18, 'EH/s'], [1e15, 'PH/s'],
+        [1e12, 'TH/s'], [1e9,  'GH/s'], [1e6,  'MH/s'], [1e3,  'kH/s'], [1, 'H/s']
+      ];
+      for (const [div, unit] of tiers) {
+        if (n >= div) {
+          const val = n / div;
+          return (val >= 100 ? val.toFixed(1) : val >= 10 ? val.toFixed(2) : val.toFixed(3)) + ' ' + unit;
+        }
+      }
+      return n.toFixed(0) + ' H/s';
+    }
+
+    function formatVolume(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n) || n <= 0) return '<span class="muted">n/a</span>';
+      if (n >= 1e9)  return '$' + (n / 1e9).toFixed(2)  + 'B';
+      if (n >= 1e6)  return '$' + (n / 1e6).toFixed(2)  + 'M';
+      if (n >= 1e3)  return '$' + (n / 1e3).toFixed(2)  + 'K';
+      return '$' + n.toFixed(2);
+    }
+
+    function formatEmissions(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n) || n <= 0) return '<span class="muted">n/a</span>';
+      if (n >= 1e9)  return '$' + (n / 1e9).toFixed(2) + 'B';
+      if (n >= 1e6)  return '$' + (n / 1e6).toFixed(2) + 'M';
+      if (n >= 1e3)  return '$' + (n / 1e3).toFixed(2) + 'K';
+      return '$' + n.toFixed(2);
     }
 
     function logoUrlForCoin(coin) {
@@ -1137,7 +1963,7 @@
           makeLinkButton(coin.website, 'Website'),
           makeLinkButton(coin.github, 'GitHub'),
           makeLinkButton(coin.explorer, 'Explorer')
-        ].filter(Boolean).join('');
+        ].filter(Boolean);
 
         const row = document.createElement('tr');
         const cleanName = cleanCoinName(coin.name);
@@ -1168,7 +1994,7 @@
           <td class="metric small"><span class="algo-cell"><span>${algoText}</span>${confidenceBadge}</span></td>
           <td class="coin-date">${escapeHtml(shortDate || 'Unknown')}</td>
           <td class="source-link">${bitcointalk ? `<a href="${escapeHtml(bitcointalk)}" target="_blank" rel="noopener noreferrer">Open Thread</a>` : '<span class="empty-links">n/a</span>'}</td>
-          <td>${links ? `<div class="links">${links}</div>` : '<span class="empty-links">No links found</span>'}</td>
+          <td>${renderLinkFlyout(links)}</td>
         `;
 
         list.appendChild(row);
@@ -1177,19 +2003,26 @@
 
     function renderPowLinks(coin) {
       const links = Array.isArray(coin.links) ? coin.links : [];
-      if (!links.length) return '<span class="empty-links">No links found</span>';
-      const linkButtons = links.slice(0, 10).map(link => {
-        const label = escapeHtml(link.label || link.text || 'Link');
-        const url = escapeHtml(link.url || '');
-        if (!url) return '';
-        return `<a href="${url}" target="_blank" rel="noopener noreferrer">${label}</a>`;
-      }).filter(Boolean).join('');
-      return linkButtons ? `<div class="links">${linkButtons}</div>` : '<span class="empty-links">No links found</span>';
+      return renderLinkFlyout(links, 'No links found', 'Links');
+    }
+
+    function getPowLinkButtonWidth(coins) {
+      let longestLabelLength = 0;
+      (coins || []).forEach((coin) => {
+        const links = Array.isArray(coin && coin.links) ? coin.links : [];
+        links.slice(0, 10).forEach((link) => {
+          const label = String((link && (link.label || link.text || 'Link')) || 'Link').trim();
+          if (label.length > longestLabelLength) longestLabelLength = label.length;
+        });
+      });
+
+      const widthInCh = Math.max(7, Math.min(longestLabelLength + 2, 14));
+      return `${widthInCh}ch`;
     }
 
     function getPowSortValue(coin, key) {
       if (!coin) return null;
-      if (key === 'price' || key === 'change7d' || key === 'marketCap') {
+      if (['price', 'change1h', 'change24h', 'change7d', 'marketCap', 'volume24h', 'emissions24h', 'networkHashrate', 'poolHashrate', 'diff7dChange'].includes(key)) {
         const numericValue = Number(coin[key]);
         return Number.isFinite(numericValue) ? numericValue : null;
       }
@@ -1225,10 +2058,11 @@
         : powDirectoryData;
 
       const sortedCoins = sortPowCoins(filteredCoins);
+  document.documentElement.style.setProperty('--pow-link-btn-width', getPowLinkButtonWidth(powDirectoryData));
       list.innerHTML = '';
 
       if (!sortedCoins.length) {
-        list.innerHTML = '<tr><td colspan="9" class="status">No coins matched your search.</td></tr>';
+        list.innerHTML = '<tr><td colspan="16" class="status">No coins matched your search.</td></tr>';
         return;
       }
 
@@ -1254,8 +2088,15 @@
           <td class="metric small">${escapeHtml(coin.symbol || 'n/a')}</td>
           <td class="metric">${escapeHtml(coin.algo || 'n/a')}</td>
           <td class="metric">${formatPrice(coin.price)}</td>
-          <td class="metric small">${formatPercent(coin.change7d)}</td>
+          <td class="metric small">${coin.change1h  != null ? formatPercentColored(coin.change1h)  : '<span class="muted">n/a</span>'}</td>
+          <td class="metric small">${coin.change24h != null ? formatPercentColored(coin.change24h) : '<span class="muted">n/a</span>'}</td>
+          <td class="metric small">${formatPercentColored(coin.change7d)}</td>
+          <td class="metric">${formatVolume(coin.volume24h)}</td>
           <td class="metric">${formatCap(coin.marketCap)}</td>
+          <td class="metric">${formatHashrate(coin.networkHashrate)}</td>
+          <td class="metric">${formatHashrate(coin.poolHashrate)}</td>
+          <td class="metric small">${coin.diff7dChange != null ? formatPercentColored(coin.diff7dChange) : '<span class="muted">n/a</span>'}</td>
+          <td class="metric">${formatEmissions(coin.emissions24h)}</td>
           <td class="coin-page-link">${coin.pageUrl ? `<a href="${escapeHtml(coin.pageUrl)}" target="_blank" rel="noopener noreferrer">Open</a>` : '<span class="empty-links">n/a</span>'}</td>
           <td>${renderPowLinks(coin)}</td>
         `;
@@ -1265,18 +2106,18 @@
 
     async function loadPowDirectory() {
       const list = document.getElementById('pow-list');
-      list.innerHTML = '<tr><td colspan="9" class="status">Loading Proof of Work coins from MiningPoolStats... Initial load may take longer while data is collected.</td></tr>';
+      list.innerHTML = '<tr><td colspan="16" class="status">Loading Proof of Work coins from MiningPoolStats... Initial load may take longer while data is collected.</td></tr>';
 
       const coins = await window.api.fetchPowDirectory();
       if (!Array.isArray(coins)) {
-        list.innerHTML = '<tr><td colspan="9" class="status">Error fetching PoW directory: ' + escapeHtml((coins && coins.error) || 'Unknown error') + '</td></tr>';
+        list.innerHTML = '<tr><td colspan="16" class="status">Error fetching PoW directory: ' + escapeHtml((coins && coins.error) || 'Unknown error') + '</td></tr>';
         powDirectoryLoading = false;
         powDirectoryLoadPromise = null;
         return;
       }
 
       if (coins.length === 0) {
-        list.innerHTML = '<tr><td colspan="9" class="status">No PoW coins found from MiningPoolStats.</td></tr>';
+        list.innerHTML = '<tr><td colspan="16" class="status">No PoW coins found from MiningPoolStats.</td></tr>';
         powDirectoryLoading = false;
         powDirectoryLoadPromise = null;
         return;
@@ -1493,6 +2334,116 @@
       }
     }
 
+    function parsePositiveNumber(value) {
+      const n = Number(value);
+      if (!Number.isFinite(n) || n < 0) return null;
+      return n;
+    }
+
+    function formatMoney(value) {
+      const amount = Number(value);
+      if (!Number.isFinite(amount)) return '$0.00';
+      return '$' + amount.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function setPowerText(id, value) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    }
+
+    function calculatePowerCosts() {
+      const power = parsePositiveNumber(document.getElementById('pc-power')?.value);
+      const powerUnit = String(document.getElementById('pc-power-unit')?.value || 'w').toLowerCase();
+      const miners = parsePositiveNumber(document.getElementById('pc-miners')?.value);
+      const efficiency = parsePositiveNumber(document.getElementById('pc-efficiency')?.value);
+      const hours = parsePositiveNumber(document.getElementById('pc-hours')?.value);
+      const price = parsePositiveNumber(document.getElementById('pc-price')?.value);
+      const days = parsePositiveNumber(document.getElementById('pc-days')?.value);
+      const revenue = parsePositiveNumber(document.getElementById('pc-revenue')?.value);
+      const errorEl = document.getElementById('pc-error');
+
+      if (!power || !miners || !efficiency || efficiency <= 0 || !hours || !price || !days || revenue === null) {
+        if (errorEl) errorEl.textContent = 'Enter valid positive values for all fields. Revenue can be 0.';
+        return;
+      }
+      if (hours > 24) {
+        if (errorEl) errorEl.textContent = 'Usage hours/day cannot be greater than 24.';
+        return;
+      }
+
+      if (errorEl) errorEl.textContent = '';
+
+      const wattsPerMiner = powerUnit === 'kw' ? power * 1000 : power;
+      const totalWattsAtDevice = wattsPerMiner * miners;
+      const wallWatts = totalWattsAtDevice / (efficiency / 100);
+      const effectiveKw = wallWatts / 1000;
+      const dailyKwh = effectiveKw * hours;
+      const cycleKwh = dailyKwh * days;
+      const yearlyKwh = dailyKwh * 365;
+
+      const dailyCost = dailyKwh * price;
+      const cycleCost = cycleKwh * price;
+      const yearlyCost = yearlyKwh * price;
+
+      const dailyNet = revenue - dailyCost;
+      const yearlyNet = (revenue * 365) - yearlyCost;
+
+      setPowerText('pc-effective-draw', `${effectiveKw.toFixed(2)} kW`);
+      setPowerText('pc-daily-energy', `${dailyKwh.toFixed(2)} kWh/day`);
+      setPowerText('pc-daily-cost', formatMoney(dailyCost));
+      setPowerText('pc-daily-net', `Net/day: ${formatMoney(dailyNet)}`);
+      setPowerText('pc-cycle-cost', formatMoney(cycleCost));
+      setPowerText('pc-cycle-energy', `${cycleKwh.toFixed(2)} kWh per cycle`);
+      setPowerText('pc-yearly-cost', formatMoney(yearlyCost));
+      setPowerText('pc-yearly-net', `Net/year: ${formatMoney(yearlyNet)}`);
+    }
+
+    function resetPowerCosts() {
+      const defaults = {
+        'pc-power': '2000',
+        'pc-power-unit': 'w',
+        'pc-miners': '1',
+        'pc-efficiency': '90',
+        'pc-hours': '24',
+        'pc-price': '0.15',
+        'pc-days': '30',
+        'pc-revenue': '0'
+      };
+
+      Object.entries(defaults).forEach(([id, value]) => {
+        const el = document.getElementById(id);
+        if (el) el.value = value;
+      });
+
+      calculatePowerCosts();
+    }
+
+    const powerInputIds = [
+      'pc-power',
+      'pc-power-unit',
+      'pc-miners',
+      'pc-efficiency',
+      'pc-hours',
+      'pc-price',
+      'pc-days',
+      'pc-revenue'
+    ];
+
+    powerInputIds.forEach((id) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const evt = el.tagName === 'SELECT' ? 'change' : 'input';
+      el.addEventListener(evt, calculatePowerCosts);
+    });
+
+    const calcBtn = document.getElementById('pc-calc');
+    const resetBtn = document.getElementById('pc-reset');
+    if (calcBtn) calcBtn.addEventListener('click', calculatePowerCosts);
+    if (resetBtn) resetBtn.addEventListener('click', resetPowerCosts);
+
     function startSplashScreen() {
       const splash = document.getElementById('startup-splash');
       const fill = document.getElementById('splash-bar-fill');
@@ -1530,10 +2481,360 @@
       requestAnimationFrame(step);
     }
 
+    // ----------------------------------------------------------------
+    // Upcoming Events Calendar
+    // ----------------------------------------------------------------
+    let calendarLoaded = false;
+    let calendarLoading = false;
+    let calendarData = { upcoming: [], past: [] };
+    let calSearchQuery = '';
+
+    const calUpcomingList = document.getElementById('cal-upcoming-list');
+    const calPastList = document.getElementById('cal-past-list');
+    const calStatus = document.getElementById('cal-status');
+    const calSearchInput = document.getElementById('cal-search');
+
+    if (calSearchInput) {
+      calSearchInput.addEventListener('input', () => {
+        calSearchQuery = calSearchInput.value.trim().toLowerCase();
+        renderCalendar();
+      });
+    }
+
+    function calBadge(eventType) {
+      const t = (eventType || '').toLowerCase();
+      if (t.includes('halving')) return `<span class="cal-badge cal-badge-halving">${escapeHtml(eventType)}</span>`;
+      if (t.includes('algo')) return `<span class="cal-badge cal-badge-algo">${escapeHtml(eventType)}</span>`;
+      if (t.includes('fork')) return `<span class="cal-badge cal-badge-fork">${escapeHtml(eventType)}</span>`;
+      return `<span class="cal-badge cal-badge-other">${escapeHtml(eventType)}</span>`;
+    }
+
+    function renderCalCard(event) {
+      const name = escapeHtml(event.name || 'Unknown');
+      const symbol = escapeHtml(event.symbol || '');
+      const iconUrl = event.iconUrl || '';
+      const fallback = (event.name || '?').charAt(0).toUpperCase();
+      const daysNum = Number.isFinite(event.days) ? event.days : '?';
+      const daysLabel = 'Days';
+      const dateStr = escapeHtml(event.date || '');
+      const blockInfo = escapeHtml(event.blockInfo || '');
+      const desc = escapeHtml(event.description || '');
+      const coinUrl = event.coinUrl || '';
+      const nameHtml = coinUrl
+        ? `<a href="${escapeHtml(coinUrl)}" title="Open MiningPoolStats page">${name}</a>`
+        : name;
+
+      const iconHtml = iconUrl
+        ? `<img class="cal-icon" src="${escapeHtml(iconUrl)}" alt="${name}" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-flex';">\
+<span class="cal-icon-dot" style="display:none;">${escapeHtml(fallback)}</span>`
+        : `<span class="cal-icon-dot">${escapeHtml(fallback)}</span>`;
+
+      return `
+        <div class="cal-card">
+          <div class="cal-countdown">
+            <span class="cal-days">${daysNum}</span>
+            <span class="cal-days-label">${daysLabel}</span>
+            <span class="cal-date">${dateStr}</span>
+          </div>
+          <div class="cal-card-header">
+            ${iconHtml}
+            <span class="cal-coin-name">${nameHtml}<span class="cal-symbol">${symbol}</span></span>
+            ${calBadge(event.eventType)}
+          </div>
+          <div class="cal-card-body">
+            ${blockInfo ? `<div class="cal-block">${blockInfo}</div>` : ''}
+            ${desc ? `<div class="cal-desc">${desc}</div>` : ''}
+          </div>
+        </div>`;
+    }
+
+    function renderCalendar() {
+      const q = calSearchQuery;
+      const filterFn = e => !q || `${e.name} ${e.symbol}`.toLowerCase().includes(q);
+
+      const upcoming = (calendarData.upcoming || []).filter(filterFn);
+      const past = (calendarData.past || []).filter(filterFn);
+
+      if (calUpcomingList) {
+        calUpcomingList.innerHTML = upcoming.length
+          ? upcoming.map(renderCalCard).join('')
+          : '<div class="cal-empty">No upcoming events found.</div>';
+        // Wire external link clicks through shell for upcoming
+        calUpcomingList.querySelectorAll('a[href^="http"]').forEach(a => {
+          a.addEventListener('click', e => {
+            e.preventDefault();
+            window.api.openExternal(a.href);
+          });
+        });
+      }
+
+      if (calPastList) {
+        calPastList.innerHTML = past.length
+          ? past.map(renderCalCard).join('')
+          : '<div class="cal-empty">No past events found.</div>';
+        calPastList.querySelectorAll('a[href^="http"]').forEach(a => {
+          a.addEventListener('click', e => {
+            e.preventDefault();
+            window.api.openExternal(a.href);
+          });
+        });
+      }
+    }
+
+    async function loadCalendar() {
+      if (calStatus) calStatus.textContent = 'Loading…';
+      if (calUpcomingList) calUpcomingList.innerHTML = '<div class="cal-empty">Fetching events from MiningPoolStats…</div>';
+      if (calPastList) calPastList.innerHTML = '<div class="cal-empty">Fetching events from MiningPoolStats…</div>';
+
+      try {
+        const result = await window.api.fetchCalendar();
+        if (result && result.error) {
+          if (calStatus) calStatus.textContent = 'Error: ' + escapeHtml(result.error);
+          if (calUpcomingList) calUpcomingList.innerHTML = '<div class="cal-empty">Failed to load. Check your connection.</div>';
+          if (calPastList) calPastList.innerHTML = '';
+          return;
+        }
+        calendarData = result || { upcoming: [], past: [] };
+        renderCalendar();
+        const total = (calendarData.upcoming || []).length + (calendarData.past || []).length;
+        if (calStatus) calStatus.textContent = `${(calendarData.upcoming||[]).length} upcoming · ${(calendarData.past||[]).length} past · updated ${new Date().toLocaleTimeString()}`;
+      } catch (err) {
+        if (calStatus) calStatus.textContent = 'Error loading calendar.';
+        if (calUpcomingList) calUpcomingList.innerHTML = `<div class="cal-empty">Error: ${escapeHtml(String(err && err.message ? err.message : err))}</div>`;
+        if (calPastList) calPastList.innerHTML = '';
+      } finally {
+        calendarLoaded = true;
+        calendarLoading = false;
+      }
+    }
+
+    function ensureCalendarLoaded() {
+      if (calendarLoaded || calendarLoading) return;
+      calendarLoading = true;
+      loadCalendar();
+    }
+
+    // ----------------------------------------------------------------
+    // Miner Calc
+    // ----------------------------------------------------------------
+    const MC_ALGO_INPUTS = [
+      { id: 'mc-kawpow',  key: 'kawpow', label: 'KawPow'      },
+      { id: 'mc-eth',     key: 'eth',    label: 'Ethash'      },
+      { id: 'mc-etc',     key: 'etc',    label: 'Etchash'     },
+      { id: 'mc-erg',     key: 'erg',    label: 'Autolykos'   },
+      { id: 'mc-firo',    key: 'firo',   label: 'FiroPow'     },
+      { id: 'mc-cfx',     key: 'cfx',    label: 'Octopus'     },
+      { id: 'mc-zec',     key: 'zec',    label: 'Equihash'    },
+      { id: 'mc-alph',    key: 'alph',   label: 'Blake3'      },
+      { id: 'mc-xmr',     key: 'xmr',   label: 'RandomX'     },
+      { id: 'mc-rtm',     key: 'rtm',    label: 'GhostRider'  },
+      { id: 'mc-sha256',  key: 'sha256', label: 'SHA-256'     },
+      { id: 'mc-ltc',     key: 'ltc',    label: 'Scrypt'      }
+    ];
+
+    let mcCoinsData = [];
+    let mcBtcPrice = 0;
+    let mcSortKey = 'profit';
+    let mcSortDir = 'desc';
+    let mcAlgoFilter = '';
+
+    const mcTbody = document.getElementById('mc-tbody');
+    const mcStatus = document.getElementById('mc-status');
+    const mcBtcDisplay = document.getElementById('mc-btc-price-display');
+    const mcAlgoFilterEl = document.getElementById('mc-algo-filter');
+    const mcSortHeaders = Array.from(document.querySelectorAll('th[data-mc-sort]'));
+
+    mcSortHeaders.forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.mcSort;
+        if (!key) return;
+        if (mcSortKey === key) {
+          mcSortDir = mcSortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          mcSortKey = key;
+          mcSortDir = 'desc';
+        }
+        renderMcTable();
+        updateMcSortIndicators();
+      });
+    });
+
+    if (mcAlgoFilterEl) {
+      mcAlgoFilterEl.addEventListener('change', () => {
+        mcAlgoFilter = mcAlgoFilterEl.value;
+        renderMcTable();
+      });
+    }
+
+    function updateMcSortIndicators() {
+      mcSortHeaders.forEach(th => {
+        th.classList.remove('mc-sorted-asc', 'mc-sorted-desc');
+        if (th.dataset.mcSort === mcSortKey) {
+          th.classList.add(mcSortDir === 'asc' ? 'mc-sorted-asc' : 'mc-sorted-desc');
+        }
+      });
+    }
+
+    function mcFmtMoney(val) {
+      const n = Number(val);
+      if (!Number.isFinite(n)) return '$0.00';
+      return '$' + Math.abs(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function mcFmtCoins(val) {
+      const n = Number(val);
+      if (!Number.isFinite(n) || n === 0) return '0';
+      if (n >= 1000) return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+      if (n >= 1) return n.toFixed(4);
+      return n.toFixed(6);
+    }
+
+    function renderMcTable() {
+      if (!mcTbody) return;
+
+      let rows = mcAlgoFilter
+        ? mcCoinsData.filter(c => (c.algorithm || '').toLowerCase().includes(mcAlgoFilter.toLowerCase()))
+        : mcCoinsData;
+
+      const dirMul = mcSortDir === 'asc' ? 1 : -1;
+      rows = rows.slice().sort((a, b) => {
+        const va = Number.isFinite(a[mcSortKey]) ? a[mcSortKey] : (String(a[mcSortKey] || '').toLowerCase());
+        const vb = Number.isFinite(b[mcSortKey]) ? b[mcSortKey] : (String(b[mcSortKey] || '').toLowerCase());
+        if (typeof va === 'number' && typeof vb === 'number') return (va - vb) * dirMul;
+        return String(va).localeCompare(String(vb)) * dirMul;
+      });
+
+      mcTbody.innerHTML = '';
+
+      if (!rows.length) {
+        mcTbody.innerHTML = '<tr><td colspan="9" class="mc-empty">No results. Check that WhatToMine returned data for your algorithm(s) — some keys may not be supported by their API.</td></tr>';
+        return;
+      }
+
+      rows.forEach((coin, idx) => {
+        const rev = coin.revenue;
+        const cost = coin.powerCost;
+        const profit = coin.profit;
+
+        let profitCls = 'mc-profit-zero';
+        let profitSign = '';
+        if (profit > 0.005) { profitCls = 'mc-profit-pos'; profitSign = '+'; }
+        else if (profit < -0.005) { profitCls = 'mc-profit-neg'; profitSign = ''; }
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="col-index">${idx + 1}</td>
+          <td><span class="coin-name">${escapeHtml(coin.name)}</span><span class="mc-tag">${escapeHtml(coin.tag)}</span></td>
+          <td><span class="mc-algo-badge">${escapeHtml(coin.algorithm)}</span></td>
+          <td class="metric">${mcFmtCoins(coin.estimatedRewards)}</td>
+          <td class="metric">${mcFmtMoney(rev)}</td>
+          <td class="metric">${cost > 0 ? mcFmtMoney(cost) : '<span class="muted">—</span>'}</td>
+          <td class="metric ${profitCls}">${profitSign}${mcFmtMoney(profit)}</td>
+          <td class="metric">${mcFmtCoins(coin.blockReward)}</td>
+          <td><span style="color:#8fb3d3;font-size:12px;">${escapeHtml(coin.status || 'Active')}</span></td>
+        `;
+        mcTbody.appendChild(tr);
+      });
+    }
+
+    function populateMcAlgoFilter(coins) {
+      if (!mcAlgoFilterEl) return;
+      const algos = [...new Set(coins.map(c => c.algorithm).filter(Boolean))].sort();
+      // Rebuild options keeping the "All" entry
+      while (mcAlgoFilterEl.options.length > 1) mcAlgoFilterEl.remove(1);
+      algos.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        mcAlgoFilterEl.appendChild(opt);
+      });
+    }
+
+    async function runMinerCalc() {
+      if (!mcTbody || !mcStatus) return;
+
+      const algoInputs = MC_ALGO_INPUTS.map(({ id, key }) => {
+        const el = document.getElementById(id);
+        const hrValue = el ? (parseFloat(el.value) || 0) : 0;
+        const powerWatts = 0; // power handled client-side
+        return { key, hrValue, powerWatts };
+      }).filter(a => a.hrValue > 0);
+
+      if (!algoInputs.length) {
+        if (mcStatus) mcStatus.textContent = 'Enter at least one hashrate value.';
+        return;
+      }
+
+      mcStatus.textContent = 'Fetching data from WhatToMine…';
+      mcTbody.innerHTML = '<tr><td colspan="9" class="mc-empty">Loading…</td></tr>';
+
+      const electricityRate = parseFloat(document.getElementById('mc-power-price')?.value) || 0;
+      const totalWatts = parseFloat(document.getElementById('mc-total-watts')?.value) || 0;
+      const dailyPowerCostTotal = (totalWatts / 1000) * 24 * electricityRate;
+
+      try {
+        const result = await window.api.fetchWtmProfitability(algoInputs);
+
+        if (!result || !Array.isArray(result.coins)) {
+          mcStatus.textContent = 'Error: no data returned. Check your connection.';
+          mcTbody.innerHTML = '<tr><td colspan="9" class="mc-empty">Failed to load data.</td></tr>';
+          return;
+        }
+
+        mcBtcPrice = result.btcPrice || 0;
+        if (mcBtcDisplay) {
+          mcBtcDisplay.textContent = mcBtcPrice > 0
+            ? `BTC = $${mcBtcPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+            : '';
+        }
+
+        // Distribute daily power cost proportionally across coins by BTC revenue.
+        const totalBtcRev = result.coins.reduce((s, c) => s + (c.btcRevenue24 || c.btcRevenue || 0), 0);
+
+        mcCoinsData = result.coins.map(c => {
+          const revenueBtc = c.btcRevenue24 || c.btcRevenue || 0;
+          const revenue = revenueBtc * mcBtcPrice;
+          let powerCost = 0;
+          if (totalBtcRev > 0 && dailyPowerCostTotal > 0) {
+            powerCost = dailyPowerCostTotal * (revenueBtc / totalBtcRev);
+          }
+          const profit = revenue - powerCost;
+          return { ...c, revenueBtc, revenue, powerCost, profit };
+        });
+
+        populateMcAlgoFilter(mcCoinsData);
+        renderMcTable();
+        updateMcSortIndicators();
+
+        const count = mcCoinsData.length;
+        mcStatus.textContent = `${count} coin${count === 1 ? '' : 's'} found · updated ${new Date().toLocaleTimeString()}`;
+      } catch (err) {
+        mcStatus.textContent = 'Error fetching data.';
+        mcTbody.innerHTML = `<tr><td colspan="9" class="mc-empty">Error: ${escapeHtml(String(err && err.message ? err.message : err))}</td></tr>`;
+      }
+    }
+
+    function clearMinerCalc() {
+      MC_ALGO_INPUTS.forEach(({ id }) => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+      mcCoinsData = [];
+      if (mcTbody) mcTbody.innerHTML = '<tr><td colspan="9" class="mc-empty">Enter hashrates above and click Calculate to see profitability estimates.</td></tr>';
+      if (mcStatus) mcStatus.textContent = '';
+      if (mcBtcDisplay) mcBtcDisplay.textContent = '';
+    }
+
+    const mcCalcBtn = document.getElementById('mc-calc-btn');
+    const mcClearBtn = document.getElementById('mc-clear-btn');
+    if (mcCalcBtn) mcCalcBtn.addEventListener('click', runMinerCalc);
+    if (mcClearBtn) mcClearBtn.addEventListener('click', clearMinerCalc);
+
     function startApp() {
       // Begin both data pipelines immediately while splash is visible.
       loadCoins();
       ensurePowDirectoryLoaded();
+      calculatePowerCosts();
       startSplashScreen();
       setInterval(loadCoins, 60000); // Refresh every 60 seconds
     }

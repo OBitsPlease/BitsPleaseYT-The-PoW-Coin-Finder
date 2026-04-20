@@ -2,6 +2,20 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const scraper = require('./scraper');
 
+function configureLocalDataPaths() {
+  if (process.platform !== 'win32') return;
+  const localAppData = process.env.LOCALAPPDATA;
+  if (!localAppData) return;
+
+  // Keep Electron state in LOCALAPPDATA so it never depends on OneDrive-backed folders.
+  const baseDir = path.join(localAppData, 'BitsPleaseYT The PoW Coin Finder');
+  app.setPath('userData', path.join(baseDir, 'User Data'));
+  app.setPath('sessionData', path.join(baseDir, 'Session Data'));
+  app.setPath('logs', path.join(baseDir, 'Logs'));
+}
+
+configureLocalDataPaths();
+
 function isExternalUrl(url) {
   return /^https?:\/\//i.test(String(url || ''));
 }
@@ -65,6 +79,25 @@ ipcMain.handle('prompt-login', async () => {
     message: 'Bitcointalk.org requires login. Please implement login UI.'
   });
   return { login: false };
+});
+
+// IPC: Fetch WhatToMine profitability
+ipcMain.handle('fetch-wtm-profitability', async (event, algoInputs) => {
+  if (!Array.isArray(algoInputs)) return { coins: [], btcPrice: 0 };
+  // Sanitize each entry: only allow safe alphanumeric keys and numeric values.
+  const sanitized = algoInputs
+    .filter(a => a && typeof a.key === 'string' && /^[a-z0-9_]{1,32}$/i.test(a.key))
+    .map(a => ({
+      key: String(a.key).toLowerCase(),
+      hrValue: Math.max(0, Number(a.hrValue) || 0),
+      powerWatts: Math.max(0, Number(a.powerWatts) || 0)
+    }));
+  return await scraper.fetchWhatToMineProfitability(sanitized);
+});
+
+// IPC: Fetch calendar events
+ipcMain.handle('fetch-calendar', async () => {
+  return await scraper.fetchCalendarEvents();
 });
 
 // IPC: Open external URL

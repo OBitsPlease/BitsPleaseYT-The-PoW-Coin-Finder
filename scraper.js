@@ -19,6 +19,7 @@ const ANNOUNCEMENT_URL = 'https://bitcointalk.org/index.php?board=159.0';
 const MPS_HOME_URL = 'https://miningpoolstats.stream/';
 const MPS_DATA_URL_REGEX = /https?:\/\/data\.miningpoolstats\.stream\/data\/coins_data\.js[^"'\s]*/i;
 const MPS_CACHE_TTL_MS = 30 * 60 * 1000;
+const CG_CACHE_TTL_MS   = 25 * 60 * 1000;
 const DEFAULT_TIMEOUT_MS = 15000;
 const BT_THREAD_CONCURRENCY = 8;
 const BT_MAX_THREADS = 50;
@@ -28,6 +29,11 @@ const BT_OVERALL_TIMEOUT_MS = 60000;
 let mpsCache = {
   timestamp: 0,
   data: null
+};
+
+let cgCache = {
+  timestamp: 0,
+  data: null   // Map: symbol.toLowerCase() → { change1h, change24h, change7d }
 };
 
 async function fetchTextWithTimeout(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
@@ -47,6 +53,40 @@ async function fetchTextWithTimeout(url, timeoutMs = DEFAULT_TIMEOUT_MS) {
   } finally {
     clearTimeout(timer);
   }
+}
+
+async function fetchBitcoinUsdPrice() {
+  const priceSources = [
+    async () => {
+      const text = await fetchTextWithTimeout(
+        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd',
+        7000
+      );
+      const data = JSON.parse(text);
+      return Number(data && data.bitcoin && data.bitcoin.usd) || 0;
+    },
+    async () => {
+      const text = await fetchTextWithTimeout('https://api.coinbase.com/v2/prices/BTC-USD/spot', 7000);
+      const data = JSON.parse(text);
+      return Number(data && data.data && data.data.amount) || 0;
+    },
+    async () => {
+      const text = await fetchTextWithTimeout('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', 7000);
+      const data = JSON.parse(text);
+      return Number(data && data.price) || 0;
+    }
+  ];
+
+  for (const loadPrice of priceSources) {
+    try {
+      const price = await loadPrice();
+      if (price > 0) return price;
+    } catch (_) {
+      // Try the next source.
+    }
+  }
+
+  return 0;
 }
 
 function parseMiningPoolStatsPayload(dataText) {
@@ -477,6 +517,38 @@ async function extractMiningPoolStatsLinks(pageUrl, symbol) {
   }
 }
 
+async function fetchCoinGeckoChanges() {
+  const now = Date.now();
+  if (cgCache.data && now - cgCache.timestamp < CG_CACHE_TTL_MS) {
+    return cgCache.data;
+  }
+  const lookup = new Map();
+  try {
+    for (let page = 1; page <= 2; page++) {
+      const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=${page}&price_change_percentage=1h,24h,7d`;
+      const text = await fetchTextWithTimeout(url, 12000);
+      const coins = JSON.parse(text);
+      if (Array.isArray(coins)) {
+        for (const c of coins) {
+          if (!c.symbol) continue;
+          const key = c.symbol.toLowerCase();
+          if (!lookup.has(key)) {
+            lookup.set(key, {
+              change1h:  typeof c.price_change_percentage_1h_in_currency  === 'number' ? c.price_change_percentage_1h_in_currency  : null,
+              change24h: typeof c.price_change_percentage_24h_in_currency === 'number' ? c.price_change_percentage_24h_in_currency : null,
+              change7d:  typeof c.price_change_percentage_7d_in_currency  === 'number' ? c.price_change_percentage_7d_in_currency  : null,
+            });
+          }
+        }
+      }
+    }
+  } catch (_) {
+    // Return whatever we have; on total failure return empty map
+  }
+  cgCache = { timestamp: Date.now(), data: lookup };
+  return lookup;
+}
+
 async function fetchMiningPoolStatsCoinRows() {
   // Try the direct data URL first (pattern is stable; timestamp just busts cache).
   const directUrl = `https://data.miningpoolstats.stream/data/coins_data.js?t=${Math.floor(Date.now() / 1000)}`;
@@ -506,6 +578,7 @@ async function fetchMiningPoolStatsPOWCoins(options = {}) {
 
   try {
     const rows = await fetchMiningPoolStatsCoinRows();
+    const cgData = await fetchCoinGeckoChanges();
     const sorted = rows
       .filter(row => row && row.name && row.page)
       .sort((a, b) => {
@@ -514,17 +587,34 @@ async function fetchMiningPoolStatsPOWCoins(options = {}) {
         return mcb - mca;
       })
       .slice(0, limit)
-      .map(row => ({
-        name: row.name,
-        symbol: row.symbol || '',
-        algo: row.algo || '',
-        page: row.page,
-        pageUrl: `${MPS_HOME_URL}${row.page}`,
-        price: row.pr,
-        change7d: row.c7d,
-        marketCap: row.mc,
-        links: []
-      }));
+      .map(row => {
+        // Compute difficulty 7-day % change from the diff7 array (oldest→newest).
+        let diff7dChange = null;
+        if (Array.isArray(row.diff7) && row.diff7.length >= 2) {
+          const first = Number(row.diff7[0]);
+          const last  = Number(row.diff7[row.diff7.length - 1]);
+          if (first > 0) diff7dChange = ((last - first) / first) * 100;
+        }
+        const cgEntry = cgData.get((row.symbol || '').toLowerCase()) || {};
+        return {
+          name: row.name,
+          symbol: row.symbol || '',
+          algo: row.algo || '',
+          page: row.page,
+          pageUrl: `${MPS_HOME_URL}${row.page}`,
+          price: row.pr,
+          change1h:  cgEntry.change1h  != null ? cgEntry.change1h  : null,
+          change24h: cgEntry.change24h != null ? cgEntry.change24h : null,
+          change7d:  row.c7d          != null ? row.c7d           : (cgEntry.change7d != null ? cgEntry.change7d : null),
+          marketCap: row.mc,
+          volume24h: row.v24 || 0,
+          emissions24h: (row.e24 || 0) * (row.pr || 0),
+          networkHashrate: row.hashrate || 0,
+          poolHashrate: row.ph || 0,
+          diff7dChange,
+          links: []
+        };
+      });
 
     const concurrency = 8;
     for (let i = 0; i < sorted.length; i += concurrency) {
@@ -544,4 +634,145 @@ async function fetchMiningPoolStatsPOWCoins(options = {}) {
   }
 }
 
-module.exports = { fetchNewPOWCoins, fetchMiningPoolStatsPOWCoins };
+async function fetchWhatToMineProfitability(algoInputs) {
+  // algoInputs: [{ key: string, hrValue: number, powerWatts: number }]
+  // hrValue must already be in the unit WhatToMine expects for that algo key.
+  const enabled = (algoInputs || []).filter(a => a && a.hrValue > 0);
+  if (!enabled.length) return { coins: [], btcPrice: 0 };
+
+  // Build URL without URLSearchParams to preserve literal brackets that WhatToMine expects.
+  const parts = [];
+  enabled.forEach(({ key, hrValue, powerWatts }) => {
+    parts.push(`${encodeURIComponent(key)}=true`);
+    parts.push(`factor%5B${key}_hr%5D=${encodeURIComponent(hrValue)}`);
+    parts.push(`factor%5B${key}_p%5D=${encodeURIComponent(powerWatts || 0)}`);
+  });
+
+  const url = `https://whattomine.com/coins.json?${parts.join('&')}`;
+
+  let coinsData = [];
+  let btcPrice = 0;
+
+  try {
+    const text = await fetchTextWithTimeout(url, 15000);
+    const parsed = JSON.parse(text);
+    if (parsed && parsed.coins) {
+      coinsData = Object.entries(parsed.coins)
+        .filter(([, c]) => c && !c.lagging && (parseFloat(c.btc_revenue) || 0) > 0)
+        .map(([name, c]) => ({
+          name,
+          tag: c.tag || '',
+          algorithm: c.algorithm || '',
+          estimatedRewards: parseFloat(c.estimated_rewards) || 0,
+          estimatedRewards24: parseFloat(c.estimated_rewards24) || 0,
+          btcRevenue: parseFloat(c.btc_revenue) || 0,
+          btcRevenue24: parseFloat(c.btc_revenue24) || 0,
+          exchangeRate: parseFloat(c.exchange_rate) || 0,
+          profitability: parseFloat(c.profitability) || 0,
+          blockReward: parseFloat(c.block_reward) || 0,
+          blockTime: parseFloat(c.block_time) || 0,
+          nethash: c.nethash || 0,
+          status: c.status || '',
+          listed: !!c.listed
+        }))
+        .sort((a, b) => b.btcRevenue - a.btcRevenue);
+    }
+  } catch (_) {
+    // Return empty on network or parse failure.
+  }
+
+  btcPrice = await fetchBitcoinUsdPrice();
+
+  return { coins: coinsData, btcPrice };
+}
+
+// Cache for calendar data (15 min TTL)
+let calendarCache = { timestamp: 0, data: null };
+const CAL_CACHE_TTL_MS = 15 * 60 * 1000;
+
+function parseCalendarEvents(boxBody) {
+  const events = [];
+  if (!boxBody) return events;
+  const items = boxBody.querySelectorAll('.box-event');
+  items.forEach(item => {
+    try {
+      // Days countdown / days-ago number
+      const iconSpan = item.querySelector('.info-box-icon');
+      const daysSpan = iconSpan ? iconSpan.querySelector('span') : null;
+      const daysText = daysSpan ? daysSpan.textContent.replace(/Days?/i, '').trim() : '';
+      const days = parseInt(daysText, 10);
+
+      // Date string (e.g. "2026-04-26")
+      const dateEl = iconSpan ? iconSpan.querySelector('.info-box-text') : null;
+      const date = dateEl ? dateEl.textContent.trim() : '';
+
+      // Event type label
+      const labelEl = item.querySelector('small.label');
+      const eventType = labelEl ? labelEl.textContent.trim() : '';
+
+      // Coin icon
+      const imgEl = item.querySelector('img');
+      const iconSrc = imgEl ? (imgEl.getAttribute('data-src') || '') : '';
+      const iconUrl = iconSrc ? `https://miningpoolstats.stream/${iconSrc}` : '';
+      const coinAlt = imgEl ? (imgEl.getAttribute('alt') || '') : '';
+
+      // Coin link
+      const linkEl = item.querySelector('a[href]');
+      const coinHref = linkEl ? (linkEl.getAttribute('href') || '') : '';
+      const coinUrl = coinHref ? `https://miningpoolstats.stream/${coinHref}` : '';
+      const fullName = linkEl ? linkEl.textContent.trim() : coinAlt;
+      // Parse "CoinName (SYMBOL)"
+      const nameMatch = fullName.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+      const name = nameMatch ? nameMatch[1].trim() : fullName;
+      const symbol = nameMatch ? nameMatch[2].trim() : '';
+      const page = coinHref.replace(/^\//, '');
+
+      // Block line
+      const blockDivs = item.querySelectorAll('div');
+      let blockInfo = '';
+      blockDivs.forEach(d => {
+        if (/block\s*:/i.test(d.textContent) && d.children.length === 0) {
+          blockInfo = d.textContent.trim();
+        }
+      });
+
+      // Description (last span in info-box-content that is a direct child)
+      const contentEl = item.querySelector('.info-box-content');
+      let description = '';
+      if (contentEl) {
+        const spans = contentEl.querySelectorAll(':scope > span:not(.pull-right-container)');
+        if (spans.length) description = spans[spans.length - 1].textContent.trim();
+      }
+
+      events.push({ days, date, eventType, name, symbol, iconUrl, coinUrl, page, blockInfo, description });
+    } catch (_) {
+      // Skip malformed items
+    }
+  });
+  return events;
+}
+
+async function fetchCalendarEvents() {
+  const now = Date.now();
+  if (calendarCache.data && now - calendarCache.timestamp < CAL_CACHE_TTL_MS) {
+    return calendarCache.data;
+  }
+
+  try {
+    const html = await fetchTextWithTimeout('https://miningpoolstats.stream/calendar', 15000);
+    const dom = new JSDOM(html);
+    const doc = dom.window.document;
+
+    const boxBodies = doc.querySelectorAll('.box-body');
+    const upcoming = parseCalendarEvents(boxBodies[0] || null);
+    const past = parseCalendarEvents(boxBodies[1] || null);
+
+    const result = { upcoming, past };
+    calendarCache = { timestamp: Date.now(), data: result };
+    return result;
+  } catch (err) {
+    return { error: err.message, upcoming: [], past: [] };
+  }
+}
+
+module.exports = { fetchNewPOWCoins, fetchMiningPoolStatsPOWCoins, fetchWhatToMineProfitability, fetchCalendarEvents };
