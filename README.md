@@ -4,6 +4,10 @@ This is an Electron-based desktop app that displays newly listed and actively tr
 
 ## Release Notes
 
+### 1.0.9
+
+- Build pipeline: GitHub Actions updated to Node 24-based action versions, installers built with Node 22, release job pinned to Ubuntu 24.04.
+
 ### 1.0.8
 
 - New Listings: full coin names now wrap instead of being cut off (hover a name for the full title).
