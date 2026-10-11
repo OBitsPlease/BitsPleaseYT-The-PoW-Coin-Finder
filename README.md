@@ -4,6 +4,13 @@ This is an Electron-based desktop app that displays newly listed and actively tr
 
 ## Release Notes
 
+### 1.0.8
+
+- New Listings: full coin names now wrap instead of being cut off (hover a name for the full title).
+- Miner Calc: added a "New & Other PoW Coins" section to estimate profit for any MiningPoolStats coin (e.g. Pearl, Quantus). Quick-add chips list coins marked new on MiningPoolStats and coins recently added to WhatToMine. Estimates use your hashrate share of the MiningPoolStats network hashrate, WhatToMine block reward/time when available (otherwise MiningPoolStats 24h emission), and the MiningPoolStats price.
+- Miner Calc: algorithms introduced by new coins (e.g. PearlHash, Poseidon2-Goldilocks, QHash) are added automatically to the GPU/CPU/ASIC sections; new MiningPoolStats coins on existing algorithms are included in that algorithm's results.
+- Miner Calc: new "My GPUs" picker. Choose one or more GPUs from WhatToMine's GPU list with a quantity, then "Fill hashrates" fills every supported algorithm (hashrate × count) and uses each algorithm's benchmark wattage for that row's power cost. "Total draw" is used only for rows without GPU power data.
+
 ### 1.0.7
 
 - Fixed Miner Calc to return algorithm-correct results (no cross-algo leakage like Scrypt showing non-Scrypt rows).

@@ -227,6 +227,18 @@
       max-width: 280px;
     }
 
+    .coin-cell.wrap {
+      min-width: 300px;
+      max-width: 520px;
+    }
+
+    .coin-cell.wrap .coin-name {
+      white-space: normal;
+      overflow: visible;
+      overflow-wrap: anywhere;
+      line-height: 1.3;
+    }
+
     .pow-col-coin {
       width: 260px;
       max-width: 260px;
@@ -729,7 +741,7 @@
     /* ---- Miner Calc ---- */
     .mc-wrap {
       display: grid;
-      grid-template-columns: 270px 1fr;
+      grid-template-columns: 340px 1fr;
       gap: 0;
       min-height: 420px;
     }
@@ -867,6 +879,121 @@
     }
 
     .mc-main { overflow-x: auto; }
+
+    .mc-hint {
+      font-size: 10px;
+      color: #6a8eaa;
+      margin: -4px 0 6px 0;
+      line-height: 1.35;
+    }
+
+    .mc-custom-picker {
+      display: grid;
+      grid-template-columns: 1fr 52px;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .mc-custom-picker input {
+      border: 1px solid var(--chip-border);
+      background: #1c1c1c;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 5px 7px;
+      font-size: 12px;
+      min-width: 0;
+    }
+
+    .mc-add-btn { padding: 4px 6px; flex: none; }
+
+    .mc-new-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .mc-chip-group-label {
+      width: 100%;
+      font-size: 10px;
+      color: #8fb3d3;
+      margin-top: 2px;
+    }
+
+    .mc-coin-chip {
+      border: 1px solid #2c5a3f;
+      background: #10261a;
+      color: #9dffc9;
+      border-radius: 999px;
+      padding: 2px 8px;
+      font-size: 10px;
+      cursor: pointer;
+    }
+
+    .mc-coin-chip.wtm { border-color: #2f4f73; background: #102031; color: #9ec2e4; }
+    .mc-coin-chip:hover { filter: brightness(1.25); }
+    .mc-coin-chip:disabled { opacity: 0.4; cursor: default; filter: none; }
+
+    .mc-custom-row { grid-template-columns: 1fr 70px 62px 18px; }
+
+    .mc-algo-label .mc-new-badge { margin-left: 0; padding: 0 3px; font-size: 8px; line-height: 1.3; }
+
+    .mc-rig-picker {
+      display: grid;
+      grid-template-columns: 1fr 52px 52px;
+      gap: 4px;
+      margin-bottom: 6px;
+    }
+
+    .mc-rig-picker select { font-size: 12px; padding: 5px 6px; }
+
+    .mc-rig-picker input,
+    .mc-rig-row input {
+      border: 1px solid var(--chip-border);
+      background: #1c1c1c;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 5px 7px;
+      font-size: 12px;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .mc-rig-row {
+      display: grid;
+      grid-template-columns: 1fr 52px 18px;
+      gap: 4px;
+      align-items: center;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: #b2cce3;
+    }
+
+    .mc-rig-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .mc-algo-row.mc-rig-filled input { border-color: #2c5a3f; }
+    .mc-algo-label small { overflow: hidden; text-overflow: ellipsis; }
+
+    .mc-remove-btn {
+      border: none;
+      background: transparent;
+      color: #ff8a8a;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 0;
+    }
+
+    .mc-new-badge {
+      display: inline-block;
+      margin-left: 6px;
+      padding: 0 5px;
+      border-radius: 6px;
+      background: #10261a;
+      border: 1px solid #2c5a3f;
+      color: #9dffc9;
+      font-size: 10px;
+      font-weight: 700;
+    }
 
     .mc-results-header {
       display: flex;
@@ -1267,10 +1394,25 @@
     </div>
 
     <div class="view" id="view-miner-calc">
-      <p class="view-title">Miner Profitability Calculator &mdash; data via WhatToMine &middot; enter your hashrate per algorithm to see estimated earnings</p>
+      <p class="view-title">Miner Profitability Calculator &mdash; data via WhatToMine &amp; MiningPoolStats &middot; enter your hashrate per algorithm or add any new PoW coin to see estimated earnings</p>
       <div class="mc-wrap">
         <!-- Left: algorithm + cost inputs -->
         <div class="mc-sidebar">
+          <h3>My GPUs</h3>
+          <p class="mc-hint">Pick your GPU(s) and how many, then Fill hashrates. Uses WhatToMine benchmarks; power cost is per algorithm.</p>
+          <div class="mc-rig-picker">
+            <select id="mc-gpu-select" class="mc-unit-select" title="GPU model"><option value="">Loading GPUs…</option></select>
+            <input id="mc-gpu-count" type="number" min="1" step="1" value="1" title="How many of this GPU">
+            <button class="mc-btn mc-add-btn" id="mc-gpu-add" type="button">Add</button>
+          </div>
+          <div id="mc-rig-rows"></div>
+          <div class="mc-actions">
+            <button class="mc-btn primary" id="mc-rig-fill" type="button">Fill hashrates</button>
+            <button class="mc-btn" id="mc-rig-clear" type="button">Clear rig</button>
+          </div>
+          <div class="mc-status" id="mc-rig-status" aria-live="polite"></div>
+
+          <hr class="mc-divider">
           <h3>GPU Algorithms</h3>
 
           <div class="mc-algo-row">
@@ -1329,6 +1471,7 @@
               <option value="mh/s">MH/s</option><option value="gh/s" selected>GH/s</option><option value="th/s">TH/s</option><option value="ph/s">PH/s</option>
             </select>
           </div>
+          <div class="mc-dyn-algos" data-mc-type="GPU"></div>
 
           <hr class="mc-divider">
           <h3>CPU Algorithms</h3>
@@ -1347,6 +1490,7 @@
               <option value="h/s">H/s</option><option value="kh/s" selected>kH/s</option><option value="mh/s">MH/s</option><option value="gh/s">GH/s</option>
             </select>
           </div>
+          <div class="mc-dyn-algos" data-mc-type="CPU"></div>
 
           <hr class="mc-divider">
           <h3>ASIC Algorithms</h3>
@@ -1365,6 +1509,24 @@
               <option value="mh/s">MH/s</option><option value="gh/s" selected>GH/s</option><option value="th/s">TH/s</option><option value="ph/s">PH/s</option>
             </select>
           </div>
+          <div class="mc-dyn-algos" data-mc-type="ASIC"></div>
+
+          <div id="mc-dyn-other-wrap" style="display:none;">
+            <hr class="mc-divider">
+            <h3>Other Algorithms</h3>
+            <div class="mc-dyn-algos" data-mc-type="Other"></div>
+          </div>
+
+          <hr class="mc-divider">
+          <h3>New &amp; Other PoW Coins</h3>
+          <p class="mc-hint">Any coin on MiningPoolStats (Pearl, Quantus…). Search or click a new coin, then enter your hashrate.</p>
+          <div class="mc-custom-picker">
+            <input id="mc-custom-search" type="text" list="mc-custom-coin-list" placeholder="Loading coins…" autocomplete="off">
+            <datalist id="mc-custom-coin-list"></datalist>
+            <button class="mc-btn mc-add-btn" id="mc-custom-add" type="button">Add</button>
+          </div>
+          <div class="mc-new-chips" id="mc-new-chips"></div>
+          <div id="mc-custom-rows"></div>
 
           <hr class="mc-divider">
           <h3>Electricity</h3>
@@ -1375,7 +1537,7 @@
             <span class="mc-algo-unit">$/kWh</span>
           </div>
           <div class="mc-cost-row">
-            <span class="mc-cost-label">Total draw (W)</span>
+            <span class="mc-cost-label" title="Used for rows without GPU power data from My GPUs">Total draw (W)</span>
             <input id="mc-total-watts" type="number" step="1" min="0" value="0">
             <span class="mc-algo-unit">Watts</span>
           </div>
@@ -1487,6 +1649,7 @@
 
     navMinerCalc.addEventListener('click', () => {
       switchView('minercalc');
+      ensureMinerCalcCoinsLoaded();
     });
 
     navEvents.addEventListener('click', () => {
@@ -2022,12 +2185,12 @@
         row.innerHTML = `
           <td class="col-index">${index + 1}</td>
           <td>
-            <div class="coin-cell">
+            <div class="coin-cell wrap">
               <span class="coin-badge">
                 ${logoUrl ? `<img class="coin-logo" src="${escapeHtml(logoUrl)}" alt="${escapeHtml(cleanName)} logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline-flex';">` : ''}
                 <span class="coin-dot fallback" style="display:${logoUrl ? 'none' : 'inline-flex'};">${nameInitial}</span>
               </span>
-              <span class="coin-name${coinClass ? ' ' + coinClass : ''}">${escapeHtml(cleanName)}</span>
+              <span class="coin-name${coinClass ? ' ' + coinClass : ''}" title="${escapeHtml(cleanName)}">${escapeHtml(cleanName)}</span>
             </div>
           </td>
           <td class="metric">${priceCell}</td>
@@ -2710,6 +2873,461 @@
     let mcSortDir = 'desc';
     let mcAlgoFilter = '';
 
+    // ---- New & Other PoW Coins (any MiningPoolStats coin) ----
+    const MC_CUSTOM_PREFIXES = [
+      { prefix: '', factor: 1 },
+      { prefix: 'k', factor: 1e3 },
+      { prefix: 'M', factor: 1e6 },
+      { prefix: 'G', factor: 1e9 },
+      { prefix: 'T', factor: 1e12 },
+      { prefix: 'P', factor: 1e15 },
+      { prefix: 'E', factor: 1e18 }
+    ];
+    let mcCustomCoinList = [];
+    let mcCustomCoinsLoaded = false;
+    let mcCustomCoinsLoading = false;
+    const mcCustomByLabel = new Map();
+    const mcCustomByPage = new Map();
+    const mcCustomRows = [];
+    const mcCustomSearchEl = document.getElementById('mc-custom-search');
+    const mcCustomDatalistEl = document.getElementById('mc-custom-coin-list');
+    const mcCustomAddBtn = document.getElementById('mc-custom-add');
+    const mcCustomRowsEl = document.getElementById('mc-custom-rows');
+    const mcNewChipsEl = document.getElementById('mc-new-chips');
+
+    function mcCustomLabel(coin) {
+      const tags = [];
+      if (coin.isNewOnMps) tags.push('NEW');
+      return `${coin.name}${coin.symbol ? ' (' + coin.symbol + ')' : ''} · ${coin.algo || 'n/a'}${tags.length ? ' · ' + tags.join(' ') : ''}`;
+    }
+
+    function mcDefaultPrefixIndex(coin) {
+      const algo = String(coin.algo || '').toLowerCase();
+      if (/^sha-?256|^scrypt$|pearl/.test(algo)) return 4;
+      if (/randomx|ghostrider|yespower|yescrypt|argon|cryptonight|minotaur|verus/.test(algo)) return 1;
+      if (/sol/i.test(coin.unit || '')) return 1;
+      return 2;
+    }
+
+    function renderMcNewChips() {
+      if (!mcNewChipsEl) return;
+      const groups = [
+        { label: 'New on MiningPoolStats', cls: '', coins: mcCustomCoinList.filter(c => c.isNewOnMps).sort((a, b) => a.ageDays - b.ageDays) },
+        { label: 'Recently added to WhatToMine', cls: 'wtm', coins: mcCustomCoinList.filter(c => c.isRecentOnWtm && !c.isNewOnMps) }
+      ];
+      mcNewChipsEl.innerHTML = '';
+      const chipSymbolCounts = new Map();
+      groups.forEach(g => g.coins.forEach(c => chipSymbolCounts.set(c.symbol, (chipSymbolCounts.get(c.symbol) || 0) + 1)));
+      groups.forEach(group => {
+        if (!group.coins.length) return;
+        const label = document.createElement('div');
+        label.className = 'mc-chip-group-label';
+        label.textContent = group.label;
+        mcNewChipsEl.appendChild(label);
+        group.coins.forEach(coin => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = `mc-coin-chip ${group.cls}`.trim();
+          chip.textContent = coin.symbol && chipSymbolCounts.get(coin.symbol) === 1 ? coin.symbol : coin.name;
+          chip.title = `${coin.name} · ${coin.algo}${coin.ageDays !== null ? ` · listed ${Math.round(coin.ageDays)} days ago` : ''}`;
+          chip.dataset.page = coin.page;
+          chip.disabled = mcCustomRows.some(r => r.page === coin.page);
+          chip.addEventListener('click', () => addMcCustomRow(coin.page));
+          mcNewChipsEl.appendChild(chip);
+        });
+      });
+    }
+
+    function renderMcCustomRows() {
+      if (!mcCustomRowsEl) return;
+      mcCustomRowsEl.innerHTML = '';
+      mcCustomRows.forEach((row, idx) => {
+        const coin = mcCustomByPage.get(row.page);
+        if (!coin) return;
+        const baseUnit = coin.unit || 'H/s';
+        const div = document.createElement('div');
+        div.className = 'mc-algo-row mc-custom-row';
+        div.innerHTML = `
+          <div class="mc-algo-label" title="${escapeHtml(coin.name)} · ${escapeHtml(coin.algo)}">${escapeHtml(coin.name)}<small>${escapeHtml(coin.algo || 'n/a')}${coin.symbol ? ' · ' + escapeHtml(coin.symbol) : ''}</small></div>
+          <input type="number" step="any" min="0" placeholder="0" value="${row.value || ''}">
+          <select class="mc-unit-select" title="${escapeHtml(coin.name)} hashrate unit">
+            ${MC_CUSTOM_PREFIXES.map((p, i) => `<option value="${i}"${i === row.prefixIndex ? ' selected' : ''}>${escapeHtml(p.prefix + baseUnit)}</option>`).join('')}
+          </select>
+          <button class="mc-remove-btn" type="button" title="Remove ${escapeHtml(coin.name)}">&times;</button>
+        `;
+        div.querySelector('input').addEventListener('input', (e) => { row.value = e.target.value; });
+        div.querySelector('select').addEventListener('change', (e) => { row.prefixIndex = Number(e.target.value) || 0; });
+        div.querySelector('.mc-remove-btn').addEventListener('click', () => {
+          mcCustomRows.splice(idx, 1);
+          renderMcCustomRows();
+          renderMcNewChips();
+        });
+        mcCustomRowsEl.appendChild(div);
+      });
+    }
+
+    function addMcCustomRow(page) {
+      const coin = mcCustomByPage.get(page);
+      if (!coin) return false;
+      if (!mcCustomRows.some(r => r.page === page)) {
+        mcCustomRows.push({ page, value: '', prefixIndex: mcDefaultPrefixIndex(coin) });
+        renderMcCustomRows();
+        renderMcNewChips();
+      }
+      const inputs = mcCustomRowsEl ? mcCustomRowsEl.querySelectorAll('input') : [];
+      const rowIdx = mcCustomRows.findIndex(r => r.page === page);
+      if (inputs[rowIdx]) inputs[rowIdx].focus();
+      return true;
+    }
+
+    function addMcCustomFromSearch() {
+      if (!mcCustomSearchEl) return;
+      const text = mcCustomSearchEl.value.trim();
+      if (!text) return;
+      let coin = mcCustomByLabel.get(text);
+      if (!coin) {
+        const q = text.toLowerCase();
+        coin = mcCustomCoinList.find(c => c.name.toLowerCase() === q || c.symbol.toLowerCase() === q)
+          || mcCustomCoinList.find(c => c.name.toLowerCase().startsWith(q));
+      }
+      if (coin && addMcCustomRow(coin.page)) {
+        mcCustomSearchEl.value = '';
+      } else if (mcStatus) {
+        mcStatus.textContent = `No MiningPoolStats coin matches "${text}".`;
+      }
+    }
+
+    let mcCoinsLoadPromise = null;
+    function ensureMinerCalcCoinsLoaded() {
+      ensureMcGpuListLoaded();
+      if (!mcCoinsLoadPromise) mcCoinsLoadPromise = loadMinerCalcCoins();
+      return mcCoinsLoadPromise;
+    }
+
+    async function loadMinerCalcCoins() {
+      if (mcCustomCoinsLoaded || mcCustomCoinsLoading || !window.api || !window.api.fetchMinerCalcCoins) return;
+      mcCustomCoinsLoading = true;
+      try {
+        const result = await window.api.fetchMinerCalcCoins();
+        const coins = (result && Array.isArray(result.coins)) ? result.coins : [];
+        if (!coins.length) throw new Error((result && result.error) || 'no coins returned');
+        mcCustomCoinList = coins.slice().sort((a, b) => {
+          if (a.isNewOnMps !== b.isNewOnMps) return a.isNewOnMps ? -1 : 1;
+          if (a.isRecentOnWtm !== b.isRecentOnWtm) return a.isRecentOnWtm ? -1 : 1;
+          return a.name.localeCompare(b.name);
+        });
+        mcCustomByLabel.clear();
+        mcCustomByPage.clear();
+        if (mcCustomDatalistEl) mcCustomDatalistEl.innerHTML = '';
+        mcCustomCoinList.forEach(coin => {
+          const label = mcCustomLabel(coin);
+          mcCustomByLabel.set(label, coin);
+          mcCustomByPage.set(coin.page, coin);
+          if (mcCustomDatalistEl) {
+            const opt = document.createElement('option');
+            opt.value = label;
+            mcCustomDatalistEl.appendChild(opt);
+          }
+        });
+        if (mcCustomSearchEl) mcCustomSearchEl.placeholder = `Search ${mcCustomCoinList.length} coins (e.g. Pearl)`;
+        renderMcNewChips();
+        renderMcDynAlgos(Array.isArray(result.newAlgos) ? result.newAlgos : []);
+        mcCustomCoinsLoaded = true;
+      } catch (err) {
+        if (mcCustomSearchEl) mcCustomSearchEl.placeholder = 'Coin list unavailable';
+        if (mcNewChipsEl) mcNewChipsEl.textContent = `Could not load MiningPoolStats coins: ${err && err.message ? err.message : err}`;
+      } finally {
+        mcCustomCoinsLoading = false;
+        if (!mcCustomCoinsLoaded) mcCoinsLoadPromise = null;
+      }
+    }
+
+    if (mcCustomAddBtn) mcCustomAddBtn.addEventListener('click', addMcCustomFromSearch);
+    if (mcCustomSearchEl) {
+      mcCustomSearchEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); addMcCustomFromSearch(); }
+      });
+      mcCustomSearchEl.addEventListener('change', () => {
+        if (mcCustomByLabel.has(mcCustomSearchEl.value.trim())) addMcCustomFromSearch();
+      });
+    }
+
+    // ---- New algorithms discovered from new coins (auto-added to GPU/CPU/ASIC sections) ----
+    let mcDynAlgos = [];
+
+    function renderMcDynAlgos(newAlgos) {
+      mcDynAlgos = newAlgos.map(a => ({
+        ...a,
+        value: '',
+        prefixIndex: mcDefaultPrefixIndex({ algo: a.algo, unit: a.unit })
+      }));
+      const containers = new Map([...document.querySelectorAll('.mc-dyn-algos')].map(el => [el.dataset.mcType, el]));
+      containers.forEach(el => { el.innerHTML = ''; });
+      let hasOther = false;
+
+      mcDynAlgos.forEach(algo => {
+        const type = containers.has(algo.type) ? algo.type : 'Other';
+        if (type === 'Other') hasOther = true;
+        const container = containers.get(type);
+        if (!container) return;
+        const baseUnit = algo.unit || 'H/s';
+        const coinsText = algo.coinNames.slice(0, 4).join(', ') + (algo.coinNames.length > 4 ? '…' : '');
+        const div = document.createElement('div');
+        div.className = 'mc-algo-row';
+        div.innerHTML = `
+          <div class="mc-algo-label" title="${escapeHtml(algo.algo)}: ${escapeHtml(algo.coinNames.join(', '))}">${escapeHtml(algo.algo)}<small><span class="mc-new-badge">NEW</span> ${escapeHtml(coinsText)}</small></div>
+          <input type="number" step="any" min="0" placeholder="0">
+          <select class="mc-unit-select" title="${escapeHtml(algo.algo)} hashrate unit">
+            ${MC_CUSTOM_PREFIXES.map((p, i) => `<option value="${i}"${i === algo.prefixIndex ? ' selected' : ''}>${escapeHtml(p.prefix + baseUnit)}</option>`).join('')}
+          </select>
+        `;
+        div.querySelector('input').addEventListener('input', (e) => { algo.value = e.target.value; });
+        div.querySelector('select').addEventListener('change', (e) => { algo.prefixIndex = Number(e.target.value) || 0; });
+        algo.rowEl = div;
+        container.appendChild(div);
+      });
+
+      const otherWrap = document.getElementById('mc-dyn-other-wrap');
+      if (otherWrap) otherWrap.style.display = hasOther ? '' : 'none';
+    }
+
+    function getMcDynAlgoEntries() {
+      const entries = [];
+      mcDynAlgos.forEach(algo => {
+        const prefix = MC_CUSTOM_PREFIXES[algo.prefixIndex] || MC_CUSTOM_PREFIXES[0];
+        const hashrate = (parseFloat(algo.value) || 0) * prefix.factor;
+        if (hashrate > 0) algo.pages.forEach(page => entries.push({ page, hashrate, target: 'dyn:' + algo.algoKey }));
+      });
+      return entries;
+    }
+
+    // New MiningPoolStats coins on a fixed algorithm (e.g. Gaelium on KawPow) that WhatToMine may not list.
+    function getMcFixedAlgoNewCoinEntries() {
+      const entries = [];
+      MC_ALGO_INPUTS.forEach(({ id, unitId, key, family, expectedUnit }) => {
+        const el = document.getElementById(id);
+        const unitEl = document.getElementById(unitId);
+        const rawValue = el ? (parseFloat(el.value) || 0) : 0;
+        if (rawValue <= 0) return;
+        const baseUnit = family === 'sol' ? 'sol/s' : 'h/s';
+        const hashrate = convertMinerHashrate(rawValue, unitEl ? unitEl.value : expectedUnit, baseUnit, family);
+        mcCustomCoinList
+          .filter(c => c.fixedKey === key && (c.isNewOnMps || c.isRecentOnWtm))
+          .forEach(c => entries.push({ page: c.page, hashrate, target: 'fixed:' + key }));
+      });
+      return entries;
+    }
+
+    // ---- My GPUs: auto-fill hashrates from WhatToMine GPU benchmarks ----
+    // WhatToMine GPU algorithm names (normalized) that feed the fixed GPU inputs.
+    const MC_GPU_FIXED_ALGOS = {
+      kawpow: 'kawpow', ethash: 'eth', etchash: 'etc', autolykos: 'erg', autolykos2: 'erg',
+      firopow: 'firo', octopus: 'cfx', zhash: 'zec', equihash1445: 'zec', blake3: 'alph'
+    };
+    const mcNorm = (text) => String(text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    let mcGpuList = [];
+    let mcGpuLoadPromise = null;
+    const mcRig = [];
+    const mcRigWatts = new Map();
+    const mcRigFilledFixed = new Set();
+    const mcGpuSelectEl = document.getElementById('mc-gpu-select');
+    const mcGpuCountEl = document.getElementById('mc-gpu-count');
+    const mcRigRowsEl = document.getElementById('mc-rig-rows');
+    const mcRigStatusEl = document.getElementById('mc-rig-status');
+
+    function ensureMcGpuListLoaded() {
+      if (!mcGpuLoadPromise) mcGpuLoadPromise = loadMcGpuList();
+      return mcGpuLoadPromise;
+    }
+
+    async function loadMcGpuList() {
+      if (!mcGpuSelectEl || !window.api || !window.api.fetchWtmGpus) return;
+      try {
+        const result = await window.api.fetchWtmGpus();
+        mcGpuList = (result && Array.isArray(result.gpus)) ? result.gpus : [];
+        if (!mcGpuList.length) throw new Error((result && result.error) || 'no GPUs returned');
+        mcGpuSelectEl.innerHTML = '<option value="">Select your GPU…</option>';
+        const vendors = [...new Set(mcGpuList.map(g => g.vendor))];
+        vendors.forEach(vendor => {
+          const group = document.createElement('optgroup');
+          group.label = vendor;
+          mcGpuList.filter(g => g.vendor === vendor).forEach(g => {
+            const opt = document.createElement('option');
+            opt.value = String(g.id);
+            opt.textContent = g.name;
+            group.appendChild(opt);
+          });
+          mcGpuSelectEl.appendChild(group);
+        });
+      } catch (err) {
+        mcGpuSelectEl.innerHTML = '<option value="">GPU list unavailable</option>';
+        if (mcRigStatusEl) mcRigStatusEl.textContent = `Could not load GPUs: ${err && err.message ? err.message : err}`;
+        mcGpuLoadPromise = null;
+      }
+    }
+
+    function renderMcRig() {
+      if (!mcRigRowsEl) return;
+      mcRigRowsEl.innerHTML = '';
+      mcRig.forEach((item, idx) => {
+        const gpu = mcGpuList.find(g => g.id === item.gpuId);
+        const div = document.createElement('div');
+        div.className = 'mc-rig-row';
+        div.innerHTML = `
+          <span title="${escapeHtml(gpu ? gpu.vendor + ' ' + gpu.name : '')}">${escapeHtml(gpu ? gpu.name : 'GPU ' + item.gpuId)}</span>
+          <input type="number" min="1" step="1" value="${item.count}" title="Quantity">
+          <button class="mc-remove-btn" type="button" title="Remove">&times;</button>
+        `;
+        div.querySelector('input').addEventListener('input', (e) => {
+          item.count = Math.max(1, parseInt(e.target.value, 10) || 1);
+        });
+        div.querySelector('.mc-remove-btn').addEventListener('click', () => {
+          mcRig.splice(idx, 1);
+          renderMcRig();
+        });
+        mcRigRowsEl.appendChild(div);
+      });
+    }
+
+    function addMcRigGpu() {
+      const gpuId = Number(mcGpuSelectEl && mcGpuSelectEl.value);
+      if (!gpuId) {
+        if (mcRigStatusEl) mcRigStatusEl.textContent = 'Select a GPU first.';
+        return;
+      }
+      const count = Math.max(1, parseInt(mcGpuCountEl && mcGpuCountEl.value, 10) || 1);
+      const existing = mcRig.find(r => r.gpuId === gpuId);
+      if (existing) existing.count += count;
+      else mcRig.push({ gpuId, count });
+      if (mcGpuCountEl) mcGpuCountEl.value = '1';
+      if (mcRigStatusEl) mcRigStatusEl.textContent = '';
+      renderMcRig();
+    }
+
+    function mcRigTargetFor(benchmark) {
+      const coinKey = mcNorm(benchmark.coin);
+      const algoKey = mcNorm(benchmark.algorithm);
+      const dyn = mcDynAlgos.find(a => a.coinNames.some(n => mcNorm(n) === coinKey))
+        || mcDynAlgos.find(a => a.algoKey === algoKey);
+      if (dyn) return 'dyn:' + dyn.algoKey;
+      const fixedKey = MC_GPU_FIXED_ALGOS[algoKey];
+      return fixedKey ? 'fixed:' + fixedKey : '';
+    }
+
+    function clearMcRigFilledValues() {
+      mcRigFilledFixed.forEach(key => {
+        const cfg = MC_ALGO_INPUTS.find(a => a.key === key);
+        const el = cfg && document.getElementById(cfg.id);
+        if (el) {
+          el.value = '';
+          const row = el.closest('.mc-algo-row');
+          if (row) row.classList.remove('mc-rig-filled');
+        }
+      });
+      mcRigFilledFixed.clear();
+      mcDynAlgos.forEach(algo => {
+        if (!algo.rigFilled) return;
+        algo.rigFilled = false;
+        algo.value = '';
+        if (algo.rowEl) {
+          algo.rowEl.querySelector('input').value = '';
+          algo.rowEl.classList.remove('mc-rig-filled');
+        }
+      });
+      mcRigWatts.clear();
+    }
+
+    function mcRound(value) {
+      return Number(Number(value).toPrecision(6));
+    }
+
+    async function fillMcRigHashrates() {
+      if (!mcRig.length) {
+        if (mcRigStatusEl) mcRigStatusEl.textContent = 'Add at least one GPU.';
+        return;
+      }
+      if (mcRigStatusEl) mcRigStatusEl.textContent = 'Loading GPU benchmarks…';
+      await ensureMinerCalcCoinsLoaded();
+      const results = await Promise.all(mcRig.map(item => window.api.fetchWtmGpuBenchmarks(item.gpuId)));
+
+      const totals = new Map();
+      const failed = [];
+      mcRig.forEach((item, i) => {
+        const benchmarks = (results[i] && results[i].benchmarks) || [];
+        if (!benchmarks.length) {
+          const gpu = mcGpuList.find(g => g.id === item.gpuId);
+          failed.push(gpu ? gpu.name : String(item.gpuId));
+          return;
+        }
+        const used = new Set();
+        benchmarks.forEach(b => {
+          const target = mcRigTargetFor(b);
+          if (!target || used.has(target)) return;
+          used.add(target);
+          const total = totals.get(target) || { hashrate: 0, watts: 0 };
+          total.hashrate += b.hashrate * item.count;
+          total.watts += b.watts * item.count;
+          totals.set(target, total);
+        });
+      });
+
+      clearMcRigFilledValues();
+      totals.forEach((total, target) => {
+        const [kind, key] = target.split(':');
+        if (kind === 'fixed') {
+          const cfg = MC_ALGO_INPUTS.find(a => a.key === key);
+          const el = cfg && document.getElementById(cfg.id);
+          const unitEl = cfg && document.getElementById(cfg.unitId);
+          if (!el) return;
+          const fromUnit = cfg.family === 'sol' ? 'sol/s' : 'h/s';
+          if (unitEl) unitEl.value = cfg.expectedUnit;
+          el.value = mcRound(convertMinerHashrate(total.hashrate, fromUnit, cfg.expectedUnit, cfg.family));
+          const row = el.closest('.mc-algo-row');
+          if (row) row.classList.add('mc-rig-filled');
+          mcRigFilledFixed.add(key);
+        } else {
+          const algo = mcDynAlgos.find(a => a.algoKey === key);
+          if (!algo) return;
+          let prefixIndex = 0;
+          MC_CUSTOM_PREFIXES.forEach((p, i) => { if (total.hashrate / p.factor >= 1) prefixIndex = i; });
+          algo.prefixIndex = prefixIndex;
+          algo.value = String(mcRound(total.hashrate / MC_CUSTOM_PREFIXES[prefixIndex].factor));
+          algo.rigFilled = true;
+          if (algo.rowEl) {
+            algo.rowEl.querySelector('input').value = algo.value;
+            algo.rowEl.querySelector('select').value = String(prefixIndex);
+            algo.rowEl.classList.add('mc-rig-filled');
+          }
+        }
+        mcRigWatts.set(target, total.watts);
+      });
+
+      if (mcRigStatusEl) {
+        mcRigStatusEl.textContent = `Filled ${totals.size} algorithm${totals.size === 1 ? '' : 's'} from WhatToMine benchmarks${failed.length ? ` · no data for ${failed.join(', ')}` : ''}. Click Calculate.`;
+      }
+    }
+
+    function clearMcRig() {
+      mcRig.length = 0;
+      renderMcRig();
+      clearMcRigFilledValues();
+      if (mcRigStatusEl) mcRigStatusEl.textContent = '';
+    }
+
+    document.getElementById('mc-gpu-add')?.addEventListener('click', addMcRigGpu);
+    document.getElementById('mc-rig-fill')?.addEventListener('click', fillMcRigHashrates);
+    document.getElementById('mc-rig-clear')?.addEventListener('click', clearMcRig);
+
+    function getMcCustomEntries() {
+      return mcCustomRows
+        .map(row => {
+          const value = parseFloat(row.value) || 0;
+          const prefix = MC_CUSTOM_PREFIXES[row.prefixIndex] || MC_CUSTOM_PREFIXES[0];
+          return { page: row.page, hashrate: value * prefix.factor };
+        })
+        .filter(e => e.hashrate > 0);
+    }
+
     const mcTbody = document.getElementById('mc-tbody');
     const mcStatus = document.getElementById('mc-status');
     const mcBtcDisplay = document.getElementById('mc-btc-price-display');
@@ -2801,7 +3419,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="col-index">${idx + 1}</td>
-          <td><span class="coin-name">${escapeHtml(coin.name)}</span><span class="mc-tag">${escapeHtml(coin.tag)}</span></td>
+          <td><span class="coin-name">${escapeHtml(coin.name)}</span><span class="mc-tag">${escapeHtml(coin.tag)}</span>${coin.isNew ? '<span class="mc-new-badge">NEW</span>' : ''}</td>
           <td><span class="mc-algo-badge">${escapeHtml(coin.algorithm)}</span></td>
           <td class="metric">${mcFmtCoins(coin.estimatedRewards24 || coin.estimatedRewards)}</td>
           <td class="metric">${mcFmtMoney(rev)}</td>
@@ -2839,13 +3457,23 @@
         const powerWatts = 0; // power handled client-side
         return { key, hrValue, powerWatts };
       }).filter(a => a.hrValue > 0);
+      const explicitEntries = getMcCustomEntries();
+      const fixedNewPages = new Set();
+      const entryByPage = new Map();
+      getMcFixedAlgoNewCoinEntries().forEach(e => { entryByPage.set(e.page, e); fixedNewPages.add(e.page); });
+      getMcDynAlgoEntries().forEach(e => { entryByPage.set(e.page, e); fixedNewPages.delete(e.page); });
+      explicitEntries.forEach(e => { entryByPage.set(e.page, e); fixedNewPages.delete(e.page); });
+      const customEntries = [...entryByPage.values()];
+      const hasDynInput = mcDynAlgos.some(a => (parseFloat(a.value) || 0) > 0);
 
-      if (!algoInputs.length) {
+      if (!algoInputs.length && !explicitEntries.length && !hasDynInput) {
         if (mcStatus) mcStatus.textContent = 'Enter at least one hashrate value.';
         return;
       }
 
-      mcStatus.textContent = 'Fetching data from WhatToMine…';
+      mcStatus.textContent = customEntries.length
+        ? 'Fetching data from WhatToMine & MiningPoolStats…'
+        : 'Fetching data from WhatToMine…';
       mcTbody.innerHTML = '<tr><td colspan="9" class="mc-empty">Loading…</td></tr>';
 
       const electricityRate = parseFloat(document.getElementById('mc-power-price')?.value) || 0;
@@ -2853,28 +3481,56 @@
       const dailyPowerCostTotal = (totalWatts / 1000) * 24 * electricityRate;
 
       try {
-        const result = await window.api.fetchWtmProfitability(algoInputs);
+        const [result, customResult] = await Promise.all([
+          algoInputs.length ? window.api.fetchWtmProfitability(algoInputs) : Promise.resolve({ coins: [], btcPrice: 0 }),
+          customEntries.length ? window.api.fetchCustomCoinProfitability(customEntries) : Promise.resolve({ coins: [], btcPrice: 0 })
+        ]);
 
-        if (!result || !Array.isArray(result.coins)) {
+        if ((!result || !Array.isArray(result.coins)) && (!customResult || !Array.isArray(customResult.coins))) {
           mcStatus.textContent = 'Error: no data returned. Check your connection.';
           mcTbody.innerHTML = '<tr><td colspan="9" class="mc-empty">Failed to load data.</td></tr>';
           return;
         }
 
-        mcBtcPrice = result.btcPrice || 0;
+        mcBtcPrice = (result && result.btcPrice) || (customResult && customResult.btcPrice) || 0;
         if (mcBtcDisplay) {
           mcBtcDisplay.textContent = mcBtcPrice > 0
             ? `BTC = $${mcBtcPrice.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
             : '';
         }
 
-        mcCoinsData = result.coins.map(c => {
+        const fallbackPowerCost = dailyPowerCostTotal > 0 ? dailyPowerCostTotal : 0;
+        // GPU rig wattage for the algorithm takes precedence over the single Total draw value.
+        const powerCostFor = (target) => {
+          const watts = target ? mcRigWatts.get(target) : 0;
+          return watts > 0 ? (watts / 1000) * 24 * electricityRate : fallbackPowerCost;
+        };
+        const wtmCoins = ((result && result.coins) || []).map(c => {
           const revenueBtc = c.btcRevenue24 || c.btcRevenue || 0;
           const revenue = revenueBtc * mcBtcPrice;
-          const powerCost = dailyPowerCostTotal > 0 ? dailyPowerCostTotal : 0;
-          const profit = revenue - powerCost;
-          return { ...c, revenueBtc, revenue, powerCost, profit };
+          const powerCost = powerCostFor(c.mcKey ? 'fixed:' + c.mcKey : '');
+          return { ...c, revenueBtc, revenue, powerCost, profit: revenue - powerCost };
         });
+        const wtmKeys = new Set();
+        wtmCoins.forEach(c => {
+          wtmKeys.add('n:' + String(c.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''));
+          wtmKeys.add('t:' + String(c.tag || '').toLowerCase());
+        });
+        const customCoins = ((customResult && customResult.coins) || [])
+          .filter(c => {
+            // Skip new coins pulled in for a fixed algorithm when WhatToMine already returned them.
+            const page = String(c.pageUrl || '').split('/').pop();
+            if (!fixedNewPages.has(page)) return true;
+            return !wtmKeys.has('n:' + String(c.name || '').toLowerCase().replace(/[^a-z0-9]/g, ''))
+              && !wtmKeys.has('t:' + String(c.tag || '').toLowerCase());
+          })
+          .map(c => {
+            const revenue = Number(c.revenueUsd) || 0;
+            const entry = entryByPage.get(String(c.pageUrl || '').split('/').pop());
+            const powerCost = powerCostFor(entry && entry.target);
+            return { ...c, revenueBtc: c.btcRevenue24 || 0, revenue, powerCost, profit: revenue - powerCost };
+          });
+        mcCoinsData = wtmCoins.concat(customCoins);
 
         populateMcAlgoFilter(mcCoinsData);
         renderMcTable();
@@ -2894,6 +3550,12 @@
         if (el) el.value = '';
       });
       mcCoinsData = [];
+      mcCustomRows.length = 0;
+      clearMcRig();
+      renderMcCustomRows();
+      renderMcNewChips();
+      mcDynAlgos.forEach(a => { a.value = ''; });
+      document.querySelectorAll('.mc-dyn-algos input').forEach(i => { i.value = ''; });
       if (mcTbody) mcTbody.innerHTML = '<tr><td colspan="9" class="mc-empty">Enter hashrates above and click Calculate to see profitability estimates.</td></tr>';
       if (mcStatus) mcStatus.textContent = '';
       if (mcBtcDisplay) mcBtcDisplay.textContent = '';

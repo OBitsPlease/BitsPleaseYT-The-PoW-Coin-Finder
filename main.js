@@ -95,6 +95,32 @@ ipcMain.handle('fetch-wtm-profitability', async (event, algoInputs) => {
   return await scraper.fetchWhatToMineProfitability(sanitized);
 });
 
+// IPC: WhatToMine GPU list and per-GPU benchmarks for the Miner Calc rig picker
+ipcMain.handle('fetch-wtm-gpus', async () => {
+  return await scraper.fetchWtmGpuList();
+});
+
+ipcMain.handle('fetch-wtm-gpu-benchmarks', async (event, gpuId) => {
+  const id = Number(gpuId);
+  if (!Number.isInteger(id) || id <= 0 || id > 100000) return { error: 'Invalid GPU id', benchmarks: [] };
+  return await scraper.fetchWtmGpuBenchmarks(id);
+});
+
+// IPC: List MiningPoolStats coins for the Miner Calc coin picker
+ipcMain.handle('fetch-miner-calc-coins', async () => {
+  return await scraper.fetchMinerCalcCoinList();
+});
+
+// IPC: Profitability for user-selected MiningPoolStats coins
+ipcMain.handle('fetch-custom-coin-profitability', async (event, entries) => {
+  if (!Array.isArray(entries)) return { coins: [], btcPrice: 0 };
+  const sanitized = entries
+    .filter(e => e && typeof e.page === 'string' && /^[a-z0-9_.-]{1,64}$/i.test(e.page))
+    .slice(0, 300)
+    .map(e => ({ page: e.page, hashrate: Math.max(0, Number(e.hashrate) || 0) }));
+  return await scraper.fetchCustomCoinProfitability(sanitized);
+});
+
 // IPC: Fetch calendar events
 ipcMain.handle('fetch-calendar', async () => {
   return await scraper.fetchCalendarEvents();

@@ -782,11 +782,11 @@ async function fetchWhatToMineProfitability(algoInputs) {
   selectedKeys.forEach((key) => {
     const matchedCoins = rawCoinsByKey.get(key) || [];
     if (matchedCoins.length) {
-      coinsData = coinsData.concat(matchedCoins);
+      coinsData = coinsData.concat(matchedCoins.map(coin => ({ ...coin, mcKey: key })));
       return;
     }
     if (DEMO_COINS[key]) {
-      coinsData = coinsData.concat(DEMO_COINS[key]);
+      coinsData = coinsData.concat(DEMO_COINS[key].map(coin => ({ ...coin, mcKey: key })));
     }
   });
 
@@ -801,6 +801,376 @@ async function fetchWhatToMineProfitability(algoInputs) {
   btcPrice = await fetchBitcoinUsdPrice();
 
   return { coins: coinsData, btcPrice };
+}
+
+// ----------------------------------------------------------------
+// Miner Calc: any MiningPoolStats coin (new coins not covered by the
+// fixed WhatToMine algorithm inputs, e.g. Pearl, Quantus).
+// ----------------------------------------------------------------
+const MC_DATA_TTL_MS = 10 * 60 * 1000;
+const WTM_RECENT_COIN_COUNT = 12;
+let mpsRowsCache = { timestamp: 0, data: null };
+let wtmIndexCache = { timestamp: 0, data: null };
+const wtmCoinDetailCache = new Map();
+
+function normalizeCoinKey(text) {
+  return String(text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+async function fetchJsonOrNull(url, timeoutMs = 15000) {
+  try {
+    return JSON.parse(await fetchTextWithTimeout(url, timeoutMs));
+  } catch (_) {
+    return null;
+  }
+}
+
+async function getMpsRowsCached() {
+  if (mpsRowsCache.data && Date.now() - mpsRowsCache.timestamp < MC_DATA_TTL_MS) {
+    return mpsRowsCache.data;
+  }
+  const rows = (await fetchMiningPoolStatsCoinRows()).filter(row => row && row.name && row.page);
+  mpsRowsCache = { timestamp: Date.now(), data: rows };
+  return rows;
+}
+
+function addToMultiMap(map, key, value) {
+  if (!key) return;
+  if (!map.has(key)) map.set(key, []);
+  map.get(key).push(value);
+}
+
+async function getWtmCoinIndex() {
+  if (wtmIndexCache.data && Date.now() - wtmIndexCache.timestamp < MC_DATA_TTL_MS) {
+    return wtmIndexCache.data;
+  }
+
+  const [gpu, cpu, asic, calculators] = await Promise.all([
+    fetchJsonOrNull('https://whattomine.com/coins.json'),
+    fetchJsonOrNull('https://whattomine.com/cpu.json'),
+    fetchJsonOrNull('https://whattomine.com/asic.json'),
+    fetchJsonOrNull('https://whattomine.com/calculators.json')
+  ]);
+
+  // Full coin stats (block reward, block time, exchange rate) keyed by name and tag.
+  const statsByName = new Map();
+  const statsByTag = new Map();
+  [gpu, cpu, asic].forEach(list => {
+    Object.entries((list && list.coins) || {}).forEach(([name, coin]) => {
+      if (!coin) return;
+      const entry = { name, ...coin };
+      addToMultiMap(statsByName, normalizeCoinKey(name), entry);
+      addToMultiMap(statsByTag, normalizeCoinKey(coin.tag), entry);
+    });
+  });
+
+  // Lightweight list of every WhatToMine coin (id only) for per-coin lookups.
+  const calcByName = new Map();
+  const calcByTag = new Map();
+  const calcEntries = [];
+  Object.entries((calculators && calculators.coins) || {}).forEach(([name, coin]) => {
+    if (!coin || !coin.id) return;
+    const entry = { name, ...coin };
+    calcEntries.push(entry);
+    addToMultiMap(calcByName, normalizeCoinKey(name), entry);
+    addToMultiMap(calcByTag, normalizeCoinKey(coin.tag), entry);
+  });
+
+  const data = { statsByName, statsByTag, calcByName, calcByTag, calcEntries };
+  wtmIndexCache = { timestamp: Date.now(), data };
+  return data;
+}
+
+function pickSingleActive(candidates) {
+  const active = (candidates || []).filter(c => c && !c.lagging && c.status !== 'No available stats');
+  return active.length === 1 ? active[0] : null;
+}
+
+// Tickers collide across coins (e.g. QTC), so a ticker-only match must also share a name or algo prefix.
+function isLooselyRelated(row, wtmCoin) {
+  if (!wtmCoin) return false;
+  const prefix = (text) => normalizeCoinKey(text).slice(0, 4);
+  const rowName = normalizeCoinKey(row.name);
+  const wtmName = normalizeCoinKey(wtmCoin.name);
+  const rowAlgo = normalizeCoinKey(row.algo);
+  const wtmAlgo = normalizeCoinKey(wtmCoin.algorithm);
+  if (rowName && wtmName && (rowName.startsWith(prefix(wtmName)) || wtmName.startsWith(prefix(rowName)))) return true;
+  return !!(rowAlgo && wtmAlgo && (rowAlgo.includes(prefix(wtmAlgo)) || wtmAlgo.includes(prefix(rowAlgo))));
+}
+
+async function fetchWtmCoinDetail(id) {
+  const cached = wtmCoinDetailCache.get(id);
+  if (cached && Date.now() - cached.timestamp < MC_DATA_TTL_MS) return cached.data;
+  const data = await fetchJsonOrNull(`https://whattomine.com/coins/${encodeURIComponent(id)}.json`);
+  wtmCoinDetailCache.set(id, { timestamp: Date.now(), data });
+  return data;
+}
+
+async function resolveWtmCoinForMpsRow(row, index) {
+  const nameKey = normalizeCoinKey(row.name);
+  const tagKey = normalizeCoinKey(row.symbol);
+
+  const byName = pickSingleActive(index.statsByName.get(nameKey));
+  if (byName) return byName;
+  const byTag = pickSingleActive(index.statsByTag.get(tagKey));
+  if (isLooselyRelated(row, byTag)) return byTag;
+
+  const calcByName = pickSingleActive(index.calcByName.get(nameKey));
+  const calcByTag = pickSingleActive(index.calcByTag.get(tagKey));
+  const calcEntry = calcByName || (isLooselyRelated(row, calcByTag) ? calcByTag : null);
+  if (!calcEntry) return null;
+  const detail = await fetchWtmCoinDetail(calcEntry.id);
+  return detail && !detail.lagging ? detail : null;
+}
+
+// Normalized MiningPoolStats algo names already covered by the fixed Miner Calc inputs.
+const MC_FIXED_ALGO_KEYS = {
+  kawpow: 'kawpow',
+  ethash: 'eth',
+  etchash: 'etc',
+  autolykos: 'erg',
+  autolykos2: 'erg',
+  autolykosv2: 'erg',
+  firopow: 'firo',
+  octopus: 'cfx',
+  equihash: 'zec',
+  blake3: 'alph',
+  randomx: 'xmr',
+  ghostrider: 'rtm',
+  sha256: 'sha256',
+  scrypt: 'ltc'
+};
+const MC_MAX_PAGES_PER_ALGO = 15;
+
+async function fetchMinerCalcCoinList() {
+  try {
+    const [rows, index] = await Promise.all([getMpsRowsCached(), getWtmCoinIndex().catch(() => null)]);
+    const byNameKey = new Map(rows.map(row => [normalizeCoinKey(row.name), row]));
+    const bySymbolKey = new Map();
+    rows.forEach(row => addToMultiMap(bySymbolKey, normalizeCoinKey(row.symbol), row));
+
+    // Coins most recently added to WhatToMine (highest ids) that also exist on MiningPoolStats.
+    const recentWtmPages = new Set();
+    if (index) {
+      index.calcEntries
+        .filter(c => c.listed && !c.lagging)
+        .sort((a, b) => b.id - a.id)
+        .some(c => {
+          const tagMatches = bySymbolKey.get(normalizeCoinKey(c.tag)) || [];
+          const match = byNameKey.get(normalizeCoinKey(c.name))
+            || (tagMatches.length === 1 && isLooselyRelated(tagMatches[0], c) ? tagMatches[0] : null);
+          if (match) recentWtmPages.add(match.page);
+          return recentWtmPages.size >= WTM_RECENT_COIN_COUNT;
+        });
+    }
+
+    const coins = rows.map(row => {
+      const ageDays = Number(row.age) > 0 ? Number(row.age) / 86400 : null;
+      const algoKey = normalizeCoinKey(row.algo);
+      return {
+        page: row.page,
+        name: String(row.name).trim(),
+        symbol: row.symbol || '',
+        algo: row.algo || '',
+        algoKey,
+        fixedKey: MC_FIXED_ALGO_KEYS[algoKey] || '',
+        unit: row.unit || 'H/s',
+        type: row.typ || '',
+        ageDays,
+        isNewOnMps: ageDays !== null,
+        isRecentOnWtm: recentWtmPages.has(row.page),
+        marketCap: Number(row.mc) || 0
+      };
+    });
+
+    // Algorithms introduced by new coins that the fixed inputs don't cover.
+    const newAlgoMap = new Map();
+    coins.forEach(coin => {
+      if (!(coin.isNewOnMps || coin.isRecentOnWtm) || !coin.algoKey || coin.fixedKey) return;
+      if (!newAlgoMap.has(coin.algoKey)) {
+        newAlgoMap.set(coin.algoKey, { algo: coin.algo, algoKey: coin.algoKey, type: coin.type || 'Other', unit: coin.unit, newCoins: [] });
+      }
+      newAlgoMap.get(coin.algoKey).newCoins.push(coin.name);
+    });
+    const newAlgos = [...newAlgoMap.values()].map(algo => {
+      const sameAlgo = coins
+        .filter(c => c.algoKey === algo.algoKey)
+        .sort((a, b) => {
+          const aNew = algo.newCoins.includes(a.name) ? 1 : 0;
+          const bNew = algo.newCoins.includes(b.name) ? 1 : 0;
+          return (bNew - aNew) || (b.marketCap - a.marketCap);
+        })
+        .slice(0, MC_MAX_PAGES_PER_ALGO);
+      return { ...algo, pages: sameAlgo.map(c => c.page), coinNames: sameAlgo.map(c => c.name) };
+    }).sort((a, b) => a.algo.localeCompare(b.algo));
+
+    return { coins, newAlgos };
+  } catch (err) {
+    return { error: err.message, coins: [], newAlgos: [] };
+  }
+}
+
+async function fetchCustomCoinProfitability(entries) {
+  // entries: [{ page: string, hashrate: number }] — hashrate in the coin's MiningPoolStats base unit.
+  const valid = (entries || []).filter(e => e && e.page && Number(e.hashrate) > 0);
+  if (!valid.length) return { coins: [], btcPrice: 0 };
+
+  const [rows, index, btcPrice] = await Promise.all([
+    getMpsRowsCached(),
+    getWtmCoinIndex().catch(() => null),
+    fetchBitcoinUsdPrice()
+  ]);
+  const byPage = new Map(rows.map(row => [row.page, row]));
+
+  const results = [];
+  await runBatched(valid, 6, async ({ page, hashrate }) => {
+    results.push(await computeCustomCoinResult(page, hashrate));
+  });
+  return { coins: results.filter(Boolean), btcPrice };
+
+  async function computeCustomCoinResult(page, hashrate) {
+    const row = byPage.get(page);
+    if (!row) return null;
+
+    const userHashrate = Number(hashrate);
+    const networkHashrate = Number(row.hashrate) || 0;
+    const wtmCoin = index ? await resolveWtmCoinForMpsRow(row, index).catch(() => null) : null;
+
+    let blockReward = 0;
+    let blockTime = Number(row.bt) || Number(row.target) || 0;
+    let networkCoinsPerDay = 0;
+    let source = '';
+
+    if (wtmCoin) {
+      blockReward = Number(wtmCoin.block_reward24) || Number(wtmCoin.block_reward) || 0;
+      blockTime = Number(wtmCoin.block_time) || blockTime;
+      if (blockReward > 0 && blockTime > 0) {
+        networkCoinsPerDay = (86400 / blockTime) * blockReward;
+        source = 'WhatToMine';
+      }
+    }
+    if (!networkCoinsPerDay && Number(row.e24) > 0) {
+      networkCoinsPerDay = Number(row.e24);
+      if (!blockReward && blockTime > 0) blockReward = networkCoinsPerDay / (86400 / blockTime);
+      source = 'MiningPoolStats';
+    }
+
+    let priceUsd = Number(row.pr) || 0;
+    if (!priceUsd && wtmCoin && btcPrice > 0) {
+      priceUsd = (Number(wtmCoin.exchange_rate24) || Number(wtmCoin.exchange_rate) || 0) * btcPrice;
+    }
+
+    let status = 'Active';
+    if (!networkHashrate) status = 'No network hashrate';
+    else if (!networkCoinsPerDay) status = 'No emission data';
+    else if (!priceUsd) status = 'No price';
+
+    const estimatedRewards24 = networkHashrate > 0 ? (userHashrate / networkHashrate) * networkCoinsPerDay : 0;
+    const revenueUsd = estimatedRewards24 * priceUsd;
+
+    return {
+      name: String(row.name).trim(),
+      tag: row.symbol || '',
+      algorithm: row.algo || '',
+      estimatedRewards: estimatedRewards24,
+      estimatedRewards24,
+      revenueUsd,
+      btcRevenue24: btcPrice > 0 ? revenueUsd / btcPrice : 0,
+      blockReward,
+      blockTime,
+      priceUsd,
+      status: source ? `${status} · ${source}` : status,
+      isNew: Number(row.age) > 0,
+      pageUrl: `${MPS_HOME_URL}${row.page}`
+    };
+  }
+}
+
+// ----------------------------------------------------------------
+// Miner Calc: GPU benchmarks (hashrate + watts per algorithm) from WhatToMine.
+// ----------------------------------------------------------------
+const WTM_GPU_LIST_TTL_MS = 6 * 60 * 60 * 1000;
+const WTM_GPU_DETAIL_TTL_MS = 60 * 60 * 1000;
+let wtmGpuListCache = { timestamp: 0, data: null };
+const wtmGpuDetailCache = new Map();
+const HASH_PREFIX_FACTORS = { '': 1, k: 1e3, m: 1e6, g: 1e9, t: 1e12, p: 1e15, e: 1e18 };
+
+function decodeHtmlText(text) {
+  return String(text || '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&middot;/g, '·')
+    .replace(/\s+/g, ' ').trim();
+}
+
+async function fetchWtmGpuList() {
+  if (wtmGpuListCache.data && Date.now() - wtmGpuListCache.timestamp < WTM_GPU_LIST_TTL_MS) {
+    return { gpus: wtmGpuListCache.data };
+  }
+  try {
+    const html = await fetchTextWithTimeout('https://whattomine.com/gpus', 20000);
+    const seen = new Set();
+    const gpus = [];
+    const re = /<a class="manufacturer--([a-z]+)[^"]*" href="\/gpus\/(\d+)-[a-z0-9-]+[^"]*">([^<]+)<\/a>/gi;
+    let m;
+    while ((m = re.exec(html))) {
+      const id = Number(m[2]);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      const vendor = m[1].toUpperCase() === 'NVIDIA' ? 'NVIDIA' : m[1].toUpperCase();
+      gpus.push({ id, vendor, name: decodeHtmlText(m[3]) });
+    }
+    if (!gpus.length) throw new Error('No GPUs found on WhatToMine');
+    wtmGpuListCache = { timestamp: Date.now(), data: gpus };
+    return { gpus };
+  } catch (err) {
+    return { error: err.message, gpus: [] };
+  }
+}
+
+function parseBenchmarkHashrate(text) {
+  // e.g. "310.00 Th/s @ 400W", "9.80 kh/s @ 320W", "85.00 Sol/s @ 350W"
+  const match = String(text || '').match(/([\d.,]+)\s*([kmgtpe]?)(h|sol|g)\/s\s*@\s*([\d.,]+)\s*w/i);
+  if (!match) return null;
+  const value = parseFloat(match[1].replace(/,/g, ''));
+  const factor = HASH_PREFIX_FACTORS[match[2].toLowerCase()] || 1;
+  return {
+    hashrate: value * factor,
+    baseUnit: match[3].toLowerCase() === 'sol' ? 'Sol/s' : 'H/s',
+    label: `${match[1]} ${match[2]}${match[3]}/s`,
+    watts: parseFloat(match[4].replace(/,/g, '')) || 0
+  };
+}
+
+async function fetchWtmGpuBenchmarks(gpuId) {
+  const id = Number(gpuId);
+  if (!Number.isInteger(id) || id <= 0) return { error: 'Invalid GPU id', benchmarks: [] };
+  const cached = wtmGpuDetailCache.get(id);
+  if (cached && Date.now() - cached.timestamp < WTM_GPU_DETAIL_TTL_MS) return { benchmarks: cached.data };
+
+  try {
+    const html = await fetchTextWithTimeout(`https://whattomine.com/gpus/${id}`, 20000);
+    const re = /<a href="\/coins\/(\d+)-[^"]*\/gpus\/\d+[^"]*">([^<]+)<\/a><br>\s*([^<]+?)\s*<span class="text-body-secondary fs-6">\s*([^<]+?)\s*<\/span>/g;
+    const benchmarks = [];
+    let m;
+    while ((m = re.exec(html))) {
+      const parsed = parseBenchmarkHashrate(decodeHtmlText(m[4]));
+      if (!parsed) continue;
+      const coinText = decodeHtmlText(m[2]);
+      const tagMatch = coinText.match(/^(.*)\(([^)]+)\)\s*$/);
+      benchmarks.push({
+        coinId: Number(m[1]),
+        coin: tagMatch ? tagMatch[1].trim() : coinText,
+        tag: tagMatch ? tagMatch[2].trim() : '',
+        algorithm: decodeHtmlText(m[3]),
+        ...parsed
+      });
+    }
+    if (!benchmarks.length) throw new Error('No benchmarks found for this GPU');
+    wtmGpuDetailCache.set(id, { timestamp: Date.now(), data: benchmarks });
+    return { benchmarks };
+  } catch (err) {
+    return { error: err.message, benchmarks: [] };
+  }
 }
 
 // Cache for calendar data (15 min TTL)
@@ -892,4 +1262,13 @@ async function fetchCalendarEvents() {
   }
 }
 
-module.exports = { fetchNewPOWCoins, fetchMiningPoolStatsPOWCoins, fetchWhatToMineProfitability, fetchCalendarEvents };
+module.exports = {
+  fetchNewPOWCoins,
+  fetchMiningPoolStatsPOWCoins,
+  fetchWhatToMineProfitability,
+  fetchCalendarEvents,
+  fetchMinerCalcCoinList,
+  fetchCustomCoinProfitability,
+  fetchWtmGpuList,
+  fetchWtmGpuBenchmarks
+};
